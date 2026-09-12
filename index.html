@@ -33,6 +33,24 @@ img{max-width:100%}
 .mono{font-family:'Syne Mono',ui-monospace,monospace}
 .dark{background:var(--navy);color:#fff}
 .dark h1,.dark h2,.dark h3{color:#fff}
+.on-dark,.on-dark p,.on-dark .disp{color:#fff}
+.on-dark .lede{color:rgba(255,255,255,.78)}
+.on-dark .stat{background:transparent;box-shadow:none;border-left:3px solid var(--gold)}
+.on-dark .stat .n{color:var(--gold-soft)}
+.on-dark .stat .l{color:rgba(255,255,255,.72)}
+.on-dark .stat .ic{display:none}
+.on-dark .acc{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.28);box-shadow:none}
+.on-dark .acc .nm{color:rgba(255,255,255,.8)}
+.on-dark .acc .num{color:var(--gold-soft)}
+.on-dark .tst{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.18);box-shadow:none;color:#fff}
+.on-dark .tst h4,.on-dark .tst .uni,.on-dark .tst .fold{color:#fff}
+.on-dark .tst .ctry,.on-dark .tst .q{color:rgba(255,255,255,.8)}
+.on-dark .svc-panel{background:rgba(255,255,255,.05);box-shadow:none}
+.on-dark .svc-copy h3{color:#fff}.on-dark .svc-copy p{color:rgba(255,255,255,.8)}
+.on-dark .svc-tab{background:rgba(255,255,255,.12);color:#fff}
+.on-dark .svc-tab.active{background:var(--gold-soft);color:var(--navy)}
+.on-dark .chips span{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#fff}
+.on-dark .acc-fade{background:none}
 .dark .lede{color:rgba(255,255,255,.78)}
 .band{background:var(--cream-deep)}
 .light-sec{background:var(--cream)}
@@ -139,16 +157,17 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 .stat .l{font-size:.98rem;color:var(--muted);margin-top:.5rem;line-height:1.45;font-family:'Syne Mono',monospace}
 
 /* ---------- countries ---------- */
-.countries{background:var(--cream-deep);padding:var(--pad) 0;position:relative;overflow:hidden;border-top:1px solid var(--line)}
+.countries{background:var(--navy);padding:var(--pad) 0;position:relative;overflow:hidden}
+.countries h2{color:#fff}
 .marquee{overflow:hidden;position:relative;mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
 .mq-row{display:flex;gap:1.1rem;width:max-content;animation:slide var(--dur,40s) linear infinite}
 .marquee:hover .mq-row,.marquee:hover .ig-row{animation-play-state:paused}
 @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .ctry-cloud{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.6rem 1.6rem;margin-top:3rem}
-.cpill{display:inline-flex;align-items:baseline;gap:.6rem;color:var(--navy);text-decoration:none;cursor:pointer;
+.cpill{display:inline-flex;align-items:baseline;gap:.6rem;color:#fff;text-decoration:none;cursor:pointer;
   font-family:'Thesead',Georgia,serif;line-height:1;padding:.2rem .3rem;
   transition:color .3s,transform .3s}
-.cpill:hover{color:var(--gold);transform:translateY(-4px) rotate(0deg)}
+.cpill:hover{color:var(--gold-soft);transform:translateY(-4px) rotate(0deg)}
 .cpill .fl{line-height:1}
 .cpill .fl img{width:34px;height:24px;object-fit:cover;border-radius:3px;display:block}
 
@@ -183,12 +202,11 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 
 /* ---------- instagram ---------- */
 .ig-wrap{background:var(--navy);padding:var(--pad) 0;overflow:hidden}
-.ig-scroller{overflow-x:auto;overflow-y:hidden;padding:0 2rem 1rem;cursor:grab;
-  scrollbar-width:none;-webkit-overflow-scrolling:touch;
-  mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
-.ig-scroller::-webkit-scrollbar{height:0}
-.ig-scroller.dragging{cursor:grabbing}
-.ig-row{display:flex;gap:1.6rem;width:max-content}
+.ig-row{display:flex;gap:1.6rem;width:max-content;animation:slide 58s linear infinite}
+.ig-scroll{overflow-x:auto;scrollbar-width:none;cursor:grab;-webkit-overflow-scrolling:touch}
+.ig-scroll::-webkit-scrollbar{display:none}
+.ig-scroll.manual{cursor:grabbing}
+.ig-scroll.manual .ig-row{animation-play-state:paused}
 .ig{width:334px;background:#fff;border-radius:14px;overflow:hidden;color:#111;box-shadow:0 18px 40px rgba(0,0,0,.34);flex:0 0 auto}
 .ig-head{display:flex;align-items:center;gap:.7rem;padding:.7rem .8rem}
 .ig-head .pfp{width:38px;height:38px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#F9CE34,#EE2A7B,#6228D7);flex:0 0 38px}
@@ -409,13 +427,14 @@ footer a:hover{color:#fff}
   .svc-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:.7rem;-webkit-overflow-scrolling:touch}
   .svc-tab{flex:0 0 auto}
   .svc-copy{padding:2rem 1.4rem}
-  .svc-art{min-height:118px;background:var(--clay)}
+  .svc-art{min-height:104px;background:var(--clay)}
+  .svc-art .b1{left:0;top:0;width:34%;height:100%}
+  .svc-art .b2{left:26%;top:0;right:0;bottom:0}
+  .svc-art .b3{display:none}
   .svc-art .idx{display:none}
-  .svc-art .word{font-size:1.5rem;left:14%;bottom:.4rem}
-  .svc-art .b1{width:30%;height:38%}
-  .svc-art .b2{left:12%;top:14%;right:4%}
-  .svc-art .b3{width:10%;height:26%}
-  .svc-copy{padding:1.8rem 1.3rem}
+  .svc-art .word{left:30%;right:1rem;bottom:auto;top:50%;transform:translateY(-50%);font-size:1.7rem}
+  .svc-art img{left:26%;top:0;right:0;bottom:0}
+  .svc-copy{padding:1.6rem 1.3rem}
   .chips span{font-size:.86rem;padding:.4rem .8rem}
   .svc-art .b1{background:var(--gold-soft)}
   .svc-art .b2{background:var(--sand)}
@@ -498,12 +517,13 @@ footer a:hover{color:#fff}
     </div>
   </section>
 
-  <div class="divider div-gold"><div class="wrap">
+  <div id="homeSections">
+  <div class="divider div-gold" data-sec="divGold"><div class="wrap">
     <div class="disp" data-copy="divGoldLeft"></div>
     <div style="color:var(--navy);font-weight:600" data-copy="divGoldRight"></div>
   </div></div>
 
-  <section class="neu-wrap" id="numbers">
+  <section class="neu-wrap" id="numbers" data-sec="numbers">
     <div class="wrap">
       <h2 class="rv" data-copy="statsTitle"></h2>
       <p class="lede rv" data-copy="statsLede"></p>
@@ -511,8 +531,13 @@ footer a:hover{color:#fff}
     </div>
   </section>
 
+  <section class="countries" id="countries" data-sec="countries">
+    <div class="wrap"><h2 class="rv" data-copy="ctryTitle"></h2>
+      <p class="lede rv" data-copy="ctryLede"></p></div>
+    <div class="wrap"><div class="ctry-cloud rv" id="countryRow"></div></div>
+  </section>
 
-  <section class="section light-sec" id="acceptances">
+  <section class="section light-sec" id="acceptances" data-sec="acceptances">
     <div class="wrap">
       <h2 class="rv" data-copy="accTitle"></h2>
       <p class="lede rv" data-copy="accLede"></p>
@@ -524,18 +549,12 @@ footer a:hover{color:#fff}
     </div>
   </section>
 
-  <section class="countries" id="countries">
-    <div class="wrap"><h2 class="rv" data-copy="ctryTitle"></h2>
-      <p class="lede rv" data-copy="ctryLede"></p></div>
-    <div class="wrap"><div class="ctry-cloud rv" id="countryRow"></div></div>
-  </section>
-
-  <div class="divider div-navy"><div class="wrap">
+  <div class="divider div-navy" data-sec="divNavy"><div class="wrap">
     <div class="disp" data-copy="divNavy"></div>
     <a class="btn btn-gold sheen btn-sm" data-copy="divNavyBtn" href="#watch"></a>
   </div></div>
 
-  <section class="section dark" id="watch">
+  <section class="section dark" id="watch" data-sec="watch">
     <div class="wrap">
       <h2 class="rv" data-copy="watchTitle"></h2>
       <p class="lede rv" data-copy="watchLede"></p>
@@ -543,7 +562,7 @@ footer a:hover{color:#fff}
     </div>
   </section>
 
-  <section class="section band" id="latest">
+  <section class="section band" id="latest" data-sec="latest">
     <div class="wrap">
       <h2 class="rv" data-copy="blogHomeTitle"></h2>
       <div class="feat rv" id="featPost"></div>
@@ -551,16 +570,15 @@ footer a:hover{color:#fff}
     </div>
   </section>
 
-  <section class="ig-wrap" id="stories">
+  <section class="ig-wrap" id="stories" data-sec="stories">
     <div class="wrap">
       <h2 class="rv" style="color:#fff" data-copy="igTitle"></h2>
       <p class="lede rv" data-copy="igLede"></p>
     </div>
-    <div class="ig-scroller rv" id="igScroller"><div class="ig-row" id="igRow"></div></div>
-    <div class="wrap mono" style="margin-top:1.2rem;color:rgba(255,255,255,.45);font-size:.92rem">Swipe to browse</div>
+    <div class="marquee ig-scroll rv" id="igScroll" style="margin-top:3.5rem"><div class="ig-row" id="igRow"></div></div>
   </section>
 
-  <section class="section light-sec" id="services">
+  <section class="section light-sec" id="services" data-sec="services">
     <div class="wrap">
       <h2 class="rv" data-copy="svcTitle"></h2>
       <p class="lede rv" data-copy="svcLede"></p>
@@ -569,11 +587,11 @@ footer a:hover{color:#fff}
     </div>
   </section>
 
-  <div class="divider div-sand"><div class="wrap">
+  <div class="divider div-sand" data-sec="divSand"><div class="wrap">
     <div class="disp" data-copy="divSand"></div>
   </div></div>
 
-  <section class="section light-sec" id="testimonials">
+  <section class="section light-sec" id="testimonials" data-sec="testimonials">
     <div class="wrap">
       <h2 class="rv" data-copy="tstTitle"></h2>
       <p class="lede rv" data-copy="tstLede"></p>
@@ -581,7 +599,7 @@ footer a:hover{color:#fff}
     </div>
   </section>
 
-  <section class="section band" id="contact">
+  <section class="section band" id="contact" data-sec="contact">
     <div class="wrap" style="max-width:840px">
       <h2 class="rv" data-copy="ctaTitle"></h2>
       <p class="lede rv" data-copy="ctaLede"></p>
@@ -592,6 +610,7 @@ footer a:hover{color:#fff}
       <p class="bn rv" style="margin-top:2.5rem;color:var(--navy);font-size:1.2rem" data-copy="ctaBangla"></p>
     </div>
   </section>
+  </div>
 </main>
 
 <!-- ==================== TOOLS ==================== -->
@@ -788,6 +807,19 @@ function seed(){return {
    facebook:'https://www.facebook.com/studyexbd',instagram:'https://www.instagram.com/studyexbd/',
    headerLogo:'',footerLogo:'',heroImage:'',heroOpacity:'0.35',footerBanner:'',footerOpacity:'1',
    mapUrl:'https://maps.app.goo.gl/veEzeVgVmcoyohLH9',mapImage:''},
+ sections:[
+  {key:'divGold',label:'Gold band',bg:'gold'},
+  {key:'numbers',label:'Statistics',bg:'creamdeep'},
+  {key:'countries',label:'Countries we work in',bg:'navy'},
+  {key:'acceptances',label:'University acceptances',bg:'cream'},
+  {key:'divNavy',label:'Navy band',bg:'navy'},
+  {key:'watch',label:'YouTube video',bg:'navy'},
+  {key:'latest',label:'Latest blog post',bg:'creamdeep'},
+  {key:'stories',label:'Instagram posts',bg:'navy'},
+  {key:'services',label:'Services',bg:'cream'},
+  {key:'divSand',label:'Sand band',bg:'sand'},
+  {key:'testimonials',label:'Testimonials',bg:'cream'},
+  {key:'contact',label:'Contact block',bg:'creamdeep'}],
  stats:[{n:'00+',l:'University acceptances in hand'},{n:'00+',l:'Scholarships won by our students'},
         {n:'00',l:'Countries we actively file to'},{n:'00%',l:'Visas approved on cases we filed'}],
  countries:[{flag:'🇲🇾',name:'Malaysia'},{flag:'🇰🇷',name:'South Korea'},{flag:'🇭🇰',name:'Hong Kong'},
@@ -940,6 +972,19 @@ function toggleAcc(){
   s.classList.toggle('collapsed');
   b.textContent=s.classList.contains('collapsed')?'See all universities':'Show fewer';
 }
+function setupIgScroll(){
+  var el=document.getElementById('igScroll'); if(!el||el.dataset.wired)return; el.dataset.wired='1';
+  var timer=null, down=false, startX=0, startLeft=0;
+  function manual(){ el.classList.add('manual'); clearTimeout(timer);
+    timer=setTimeout(function(){ if(!down)el.classList.remove('manual') },2600) }
+  el.addEventListener('wheel',manual,{passive:true});
+  el.addEventListener('touchstart',manual,{passive:true});
+  el.addEventListener('touchend',manual,{passive:true});
+  el.addEventListener('scroll',manual,{passive:true});
+  el.addEventListener('pointerdown',function(e){ if(e.pointerType==='mouse'){down=true;startX=e.clientX;startLeft=el.scrollLeft;manual();e.preventDefault()} });
+  window.addEventListener('pointermove',function(e){ if(down){ el.scrollLeft=startLeft-(e.clientX-startX) } });
+  window.addEventListener('pointerup',function(){ if(down){down=false;manual()} });
+}
 function playVid(id){document.getElementById('videoBox').innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>'}
 function renderPages(){
   var d=load(), s=d.settings;
@@ -970,7 +1015,23 @@ function renderPages(){
   document.getElementById('socialRow').innerHTML=so.filter(function(x){return x[0]}).map(function(x){
     return '<a href="'+x[0]+'" target="_blank" rel="noopener" title="'+x[2]+'">'+img(x[1],x[2])+'</a>'}).join('');
 }
-function renderAll(){applyCopy();renderHome();renderPages();buildAdmin();observe()}
+var BGS={cream:['var(--cream)',0],creamdeep:['var(--cream-deep)',0],clay:['var(--clay)',0],
+  sand:['var(--sand)',0],gold:['var(--gold-soft)',0],navy:['var(--navy)',1],navydeep:['var(--navy-press)',1]};
+function applyLayout(){
+  var host=document.getElementById('homeSections'); if(!host)return;
+  var d=load(), list=d.sections||[], map={};
+  Array.prototype.forEach.call(host.children,function(el){ map[el.getAttribute('data-sec')]=el });
+  list.forEach(function(s){
+    var el=map[s.key]; if(!el)return;
+    host.appendChild(el);
+    var bg=BGS[s.bg]||BGS.cream;
+    el.style.background=bg[0];
+    el.classList.toggle('dark',!!bg[1]);
+    el.classList.toggle('on-dark',!!bg[1]);
+  });
+  Object.keys(map).forEach(function(k){ if(!list.some(function(s){return s.key===k})) host.appendChild(map[k]) });
+}
+function renderAll(){applyCopy();applyLayout();setupIgScroll();renderHome();renderPages();buildAdmin();observe()}
 
 /* ================= ANIMATION ================= */
 var io;
@@ -1018,6 +1079,11 @@ document.getElementById('scrim').onclick=closeSide;
 
 /* ================= ADMIN ================= */
 var SCHEMA={
+  sections:{label:'Section order and colours',group:'Basics',reorder:true,
+    fields:[{k:'label',l:'Section name'},{k:'key',l:'Section id, do not change'},
+      {k:'bg',l:'Background',t:'select',opts:[['cream','Cream'],['creamdeep','Cream deep'],['clay','Clay'],
+        ['sand','Sand'],['gold','Gold'],['navy','Navy'],['navydeep','Deep navy']]}],
+    title:'label',sub:'bg'},
   copy:{label:'Website text',single:true,group:'Basics',store:'copy',fields:Object.keys(COPYDEF).map(function(k){
     return {k:k,l:COPYLABELS[k]||k,t:(COPYDEF[k]||'').length>90?'area':'text'}})},
   settings:{label:'Settings and images',single:true,group:'Basics',fields:[
@@ -1060,6 +1126,8 @@ function buildAdmin(){
       var val=S.single&&f.t!=='file'?esc(d[store][f.k]||''):'';
       var input = f.t==='area' ? '<textarea id="f_'+key+'_'+f.k+'" rows="3">'+val+'</textarea>'
         : f.t==='file' ? '<input id="f_'+key+'_'+f.k+'" type="file" accept="image/*">'
+        : f.t==='select' ? '<select id="f_'+key+'_'+f.k+'">'+f.opts.map(function(o){
+            return '<option value="'+o[0]+'">'+o[1]+'</option>'}).join('')+'</select>'
         : '<input id="f_'+key+'_'+f.k+'" type="'+(f.t==='number'?'number':'text')+'" value="'+val+'">';
       form+='<div class="field"><label>'+f.l+'</label>'+input+'</div>';
     });
@@ -1072,8 +1140,10 @@ function buildAdmin(){
         var th=S.thumb&&it[S.thumb]?'<img class="thumb" src="'+it[S.thumb]+'">':(S.thumb?'<div class="thumb"></div>':'');
         return '<div class="row">'+th+'<div class="t">'+esc(it[S.title])+'<small>'+esc((''+(it[S.sub]||'')).slice(0,80))+'</small></div>'+
           '<div style="display:flex;gap:.4rem"><button class="btn btn-ghost btn-sm" onclick="editItem(\''+key+'\','+j+')">Edit</button>'+
-          '<button class="btn btn-ghost btn-sm" onclick="delItem(\''+key+'\','+j+')">Delete</button>'+
-          (j>0?'<button class="btn btn-ghost btn-sm" onclick="moveItem(\''+key+'\','+j+',-1)">Up</button>':'')+'</div></div>'}).join('');
+          (S.reorder?'':'<button class="btn btn-ghost btn-sm" onclick="delItem(\''+key+'\','+j+')">Delete</button>')+
+          (j>0?'<button class="btn btn-ghost btn-sm" onclick="moveItem(\''+key+'\','+j+',-1)">Up</button>':'')+
+          (j<d[key].length-1?'<button class="btn btn-ghost btn-sm" onclick="moveItem(\''+key+'\','+j+',1)">Down</button>':'')+
+          '</div></div>'}).join('');
     }
     panes+='<div class="pane'+(on?' active':'')+'" id="pane_'+key+'">'+form+list+'</div>';
   });
@@ -1162,31 +1232,6 @@ document.getElementById('importFile').onchange=function(e){
   r.onload=function(){try{mem=JSON.parse(r.result);save();alert('Content imported.')}catch(x){alert('That file could not be read.')}};
   r.readAsText(f)};
 
-/* instagram auto scroll that still allows manual scrolling and dragging */
-(function(){
-  var sc=document.getElementById('igScroller'), idle=0, down=false, sx=0, sl=0;
-  if(!sc)return;
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  function loop(){
-    var half=sc.scrollWidth/2;
-    if(!down && idle<=0 && half>0){
-      sc.scrollLeft+=0.5;
-      if(sc.scrollLeft>=half)sc.scrollLeft-=half;
-    }
-    if(idle>0)idle--;
-    requestAnimationFrame(loop);
-  }
-  requestAnimationFrame(loop);
-  function pause(){idle=180}
-  sc.addEventListener('wheel',pause,{passive:true});
-  sc.addEventListener('touchstart',pause,{passive:true});
-  sc.addEventListener('touchmove',pause,{passive:true});
-  sc.addEventListener('mouseenter',function(){idle=180});
-  sc.addEventListener('mousemove',function(){if(!down)idle=180});
-  sc.addEventListener('mousedown',function(e){down=true;sx=e.pageX;sl=sc.scrollLeft;sc.classList.add('dragging')});
-  window.addEventListener('mouseup',function(){down=false;pause();sc.classList.remove('dragging')});
-  window.addEventListener('mousemove',function(e){ if(!down)return; e.preventDefault(); sc.scrollLeft=sl-(e.pageX-sx) });
-})();
 renderAll(); route(); fetchRemote();
 </script>
 </body>
