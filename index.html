@@ -139,17 +139,16 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 .stat .l{font-size:.98rem;color:var(--muted);margin-top:.5rem;line-height:1.45;font-family:'Syne Mono',monospace}
 
 /* ---------- countries ---------- */
-.countries{background:var(--navy);padding:var(--pad) 0;position:relative;overflow:hidden}
-.countries h2{color:#fff}
+.countries{background:var(--cream-deep);padding:var(--pad) 0;position:relative;overflow:hidden;border-top:1px solid var(--line)}
 .marquee{overflow:hidden;position:relative;mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
 .mq-row{display:flex;gap:1.1rem;width:max-content;animation:slide var(--dur,40s) linear infinite}
 .marquee:hover .mq-row,.marquee:hover .ig-row{animation-play-state:paused}
 @keyframes slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .ctry-cloud{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.6rem 1.6rem;margin-top:3rem}
-.cpill{display:inline-flex;align-items:baseline;gap:.6rem;color:#fff;text-decoration:none;cursor:pointer;
+.cpill{display:inline-flex;align-items:baseline;gap:.6rem;color:var(--navy);text-decoration:none;cursor:pointer;
   font-family:'Thesead',Georgia,serif;line-height:1;padding:.2rem .3rem;
   transition:color .3s,transform .3s}
-.cpill:hover{color:var(--gold-soft);transform:translateY(-4px) rotate(0deg)}
+.cpill:hover{color:var(--gold);transform:translateY(-4px) rotate(0deg)}
 .cpill .fl{line-height:1}
 .cpill .fl img{width:34px;height:24px;object-fit:cover;border-radius:3px;display:block}
 
@@ -184,7 +183,12 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 
 /* ---------- instagram ---------- */
 .ig-wrap{background:var(--navy);padding:var(--pad) 0;overflow:hidden}
-.ig-row{display:flex;gap:1.6rem;width:max-content;animation:slide 58s linear infinite}
+.ig-scroller{overflow-x:auto;overflow-y:hidden;padding:0 2rem 1rem;cursor:grab;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.ig-scroller::-webkit-scrollbar{height:0}
+.ig-scroller.dragging{cursor:grabbing}
+.ig-row{display:flex;gap:1.6rem;width:max-content}
 .ig{width:334px;background:#fff;border-radius:14px;overflow:hidden;color:#111;box-shadow:0 18px 40px rgba(0,0,0,.34);flex:0 0 auto}
 .ig-head{display:flex;align-items:center;gap:.7rem;padding:.7rem .8rem}
 .ig-head .pfp{width:38px;height:38px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#F9CE34,#EE2A7B,#6228D7);flex:0 0 38px}
@@ -405,7 +409,14 @@ footer a:hover{color:#fff}
   .svc-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:.7rem;-webkit-overflow-scrolling:touch}
   .svc-tab{flex:0 0 auto}
   .svc-copy{padding:2rem 1.4rem}
-  .svc-art{min-height:180px;background:var(--clay)}
+  .svc-art{min-height:118px;background:var(--clay)}
+  .svc-art .idx{display:none}
+  .svc-art .word{font-size:1.5rem;left:14%;bottom:.4rem}
+  .svc-art .b1{width:30%;height:38%}
+  .svc-art .b2{left:12%;top:14%;right:4%}
+  .svc-art .b3{width:10%;height:26%}
+  .svc-copy{padding:1.8rem 1.3rem}
+  .chips span{font-size:.86rem;padding:.4rem .8rem}
   .svc-art .b1{background:var(--gold-soft)}
   .svc-art .b2{background:var(--sand)}
   .svc-art .b3{background:var(--gold)}
@@ -500,11 +511,6 @@ footer a:hover{color:#fff}
     </div>
   </section>
 
-  <section class="countries" id="countries">
-    <div class="wrap"><h2 class="rv" data-copy="ctryTitle"></h2>
-      <p class="lede rv" data-copy="ctryLede"></p></div>
-    <div class="wrap"><div class="ctry-cloud rv" id="countryRow"></div></div>
-  </section>
 
   <section class="section light-sec" id="acceptances">
     <div class="wrap">
@@ -516,6 +522,12 @@ footer a:hover{color:#fff}
       </div>
       <button class="btn btn-ghost acc-more" id="accMore" onclick="toggleAcc()">See all universities</button>
     </div>
+  </section>
+
+  <section class="countries" id="countries">
+    <div class="wrap"><h2 class="rv" data-copy="ctryTitle"></h2>
+      <p class="lede rv" data-copy="ctryLede"></p></div>
+    <div class="wrap"><div class="ctry-cloud rv" id="countryRow"></div></div>
   </section>
 
   <div class="divider div-navy"><div class="wrap">
@@ -544,7 +556,8 @@ footer a:hover{color:#fff}
       <h2 class="rv" style="color:#fff" data-copy="igTitle"></h2>
       <p class="lede rv" data-copy="igLede"></p>
     </div>
-    <div class="marquee rv" style="margin-top:3.5rem"><div class="ig-row" id="igRow"></div></div>
+    <div class="ig-scroller rv" id="igScroller"><div class="ig-row" id="igRow"></div></div>
+    <div class="wrap mono" style="margin-top:1.2rem;color:rgba(255,255,255,.45);font-size:.92rem">Swipe to browse</div>
   </section>
 
   <section class="section light-sec" id="services">
@@ -1149,6 +1162,31 @@ document.getElementById('importFile').onchange=function(e){
   r.onload=function(){try{mem=JSON.parse(r.result);save();alert('Content imported.')}catch(x){alert('That file could not be read.')}};
   r.readAsText(f)};
 
+/* instagram auto scroll that still allows manual scrolling and dragging */
+(function(){
+  var sc=document.getElementById('igScroller'), idle=0, down=false, sx=0, sl=0;
+  if(!sc)return;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  function loop(){
+    var half=sc.scrollWidth/2;
+    if(!down && idle<=0 && half>0){
+      sc.scrollLeft+=0.5;
+      if(sc.scrollLeft>=half)sc.scrollLeft-=half;
+    }
+    if(idle>0)idle--;
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  function pause(){idle=180}
+  sc.addEventListener('wheel',pause,{passive:true});
+  sc.addEventListener('touchstart',pause,{passive:true});
+  sc.addEventListener('touchmove',pause,{passive:true});
+  sc.addEventListener('mouseenter',function(){idle=180});
+  sc.addEventListener('mousemove',function(){if(!down)idle=180});
+  sc.addEventListener('mousedown',function(e){down=true;sx=e.pageX;sl=sc.scrollLeft;sc.classList.add('dragging')});
+  window.addEventListener('mouseup',function(){down=false;pause();sc.classList.remove('dragging')});
+  window.addEventListener('mousemove',function(e){ if(!down)return; e.preventDefault(); sc.scrollLeft=sl-(e.pageX-sx) });
+})();
 renderAll(); route(); fetchRemote();
 </script>
 </body>
