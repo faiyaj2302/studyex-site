@@ -206,7 +206,7 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 /* ---------- instagram ---------- */
 .ig-wrap{background:var(--navy);padding:var(--pad) 0;overflow:hidden}
 .ig-row{display:flex;gap:1.6rem;width:max-content}
-.ig-scroll{overflow-x:auto;scrollbar-width:none;cursor:grab;-webkit-overflow-scrolling:touch}
+.ig-scroll{overflow-x:auto;scrollbar-width:none;cursor:grab;scroll-behavior:auto;overscroll-behavior-x:contain}
 .ig-scroll::-webkit-scrollbar{display:none}
 .ig-scroll.manual{cursor:grabbing}
 
@@ -1010,29 +1010,37 @@ function setupIgScroll(){
   var el=document.getElementById('igScroll'); if(!el)return;
   if(el.dataset.wired){ el.scrollLeft=0; return }
   el.dataset.wired='1';
-  var paused=false, down=false, startX=0, startLeft=0, timer=null;
+  var paused=false, down=false, startX=0, startLeft=0, timer=null, pos=0, visible=true;
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   function half(){ var row=document.getElementById('igRow'); return row?row.scrollWidth/2:0 }
-  function pause(){ paused=true; clearTimeout(timer); timer=setTimeout(function(){ if(!down)paused=false },2600) }
-  function wrap(){
-    var w=half(); if(w<=0)return;
-    if(el.scrollLeft>=w) el.scrollLeft-=w;
-    else if(el.scrollLeft<0) el.scrollLeft+=w;
-  }
+  function sync(){ pos=el.scrollLeft }
+  function pause(){ paused=true; sync(); clearTimeout(timer);
+    timer=setTimeout(function(){ if(!down){ sync(); paused=false } },2200) }
   el.addEventListener('wheel',pause,{passive:true});
   el.addEventListener('touchstart',pause,{passive:true});
   el.addEventListener('touchmove',pause,{passive:true});
   el.addEventListener('touchend',pause,{passive:true});
-  el.addEventListener('scroll',function(){ wrap() },{passive:true});
-  el.addEventListener('mouseenter',function(){ paused=true });
-  el.addEventListener('mouseleave',function(){ if(!down)paused=false });
+  el.addEventListener('mouseenter',function(){ paused=true; sync() });
+  el.addEventListener('mouseleave',function(){ if(!down){ sync(); paused=false } });
   el.addEventListener('pointerdown',function(e){ if(e.pointerType==='mouse'){down=true;paused=true;startX=e.clientX;startLeft=el.scrollLeft;e.preventDefault()} });
-  window.addEventListener('pointermove',function(e){ if(down){ el.scrollLeft=startLeft-(e.clientX-startX); wrap() } });
+  window.addEventListener('pointermove',function(e){ if(down){ var w=half();
+    var v=startLeft-(e.clientX-startX);
+    if(w>0){ if(v>=w)v-=w; if(v<0)v+=w }
+    el.scrollLeft=v; pos=v } });
   window.addEventListener('pointerup',function(){ if(down){down=false;pause()} });
-  if(reduce)return;
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(en){ visible=en[0].isIntersecting; if(visible)sync() },{threshold:0}).observe(el);
+  }
+  var speed=reduce?0:0.6;
+  pos=el.scrollLeft;
   (function tick(){
-    if(!paused && document.getElementById('vHome').classList.contains('active')){ el.scrollLeft+=0.55; wrap() }
     requestAnimationFrame(tick);
+    if(speed===0||paused||down||!visible)return;
+    if(!document.getElementById('vHome').classList.contains('active'))return;
+    var w=half(); if(w<=0)return;
+    pos+=speed;
+    if(pos>=w)pos-=w;
+    el.scrollLeft=pos;
   })();
 }
 function playVid(id){document.getElementById('videoBox').innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>'}
