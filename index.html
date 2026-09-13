@@ -100,9 +100,12 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 .brand b em{font-style:normal;color:var(--gold-soft)}
 .brand i{font-style:normal;font-size:.72rem;color:var(--gold-soft);letter-spacing:.05em;font-family:'Syne Mono',monospace}
 .top-right{display:flex;align-items:center;gap:.9rem}
-.dots{width:52px;height:52px;border-radius:50%;background:var(--navy-mid);border:1px solid var(--line-l);cursor:pointer;
-  display:grid;place-items:center;gap:4px;box-shadow:6px 6px 14px var(--navy-press),-6px -6px 14px var(--navy-lift)}
-.dots span{width:5px;height:5px;border-radius:50%;background:var(--gold-soft);display:block}
+.dots{width:54px;height:54px;border-radius:14px;background:var(--navy-mid);border:1px solid var(--line-l);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  box-shadow:6px 6px 0 var(--gold-soft);transition:transform .2s,box-shadow .2s}
+.dots:hover{transform:translate(3px,3px);box-shadow:3px 3px 0 var(--gold-soft)}
+.dots span{width:24px;height:3px;border-radius:2px;background:var(--gold-soft);display:block}
+.dots span:nth-child(2){width:18px;align-self:flex-start;margin-left:15px}
 
 /* ---------- sidebar ---------- */
 .scrim{position:fixed;inset:0;background:rgba(2,16,31,.55);z-index:80;opacity:0;pointer-events:none;transition:opacity .35s}
@@ -202,11 +205,11 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 
 /* ---------- instagram ---------- */
 .ig-wrap{background:var(--navy);padding:var(--pad) 0;overflow:hidden}
-.ig-row{display:flex;gap:1.6rem;width:max-content;animation:slide 58s linear infinite}
+.ig-row{display:flex;gap:1.6rem;width:max-content}
 .ig-scroll{overflow-x:auto;scrollbar-width:none;cursor:grab;-webkit-overflow-scrolling:touch}
 .ig-scroll::-webkit-scrollbar{display:none}
 .ig-scroll.manual{cursor:grabbing}
-.ig-scroll.manual .ig-row{animation-play-state:paused}
+
 .ig{width:334px;background:#fff;border-radius:14px;overflow:hidden;color:#111;box-shadow:0 18px 40px rgba(0,0,0,.34);flex:0 0 auto}
 .ig-head{display:flex;align-items:center;gap:.7rem;padding:.7rem .8rem}
 .ig-head .pfp{width:38px;height:38px;border-radius:50%;padding:2px;background:linear-gradient(45deg,#F9CE34,#EE2A7B,#6228D7);flex:0 0 38px}
@@ -215,8 +218,9 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 .ig-head .who b{font-size:.9rem;font-weight:600;display:block}
 .ig-head .who small{font-size:.75rem;color:#666}
 .ig-head .more{color:#333;font-size:1.1rem;letter-spacing:1px}
-.ig-photo{aspect-ratio:4/5;background:#EFEAE0;display:grid;place-items:center;color:#8A7C63;font-size:.85rem;text-align:center;padding:1.4rem}
-.ig-photo img{width:100%;height:100%;object-fit:cover}
+.ig-photo{aspect-ratio:4/5;background:#EFEAE0;display:grid;place-items:center;color:#8A7C63;font-size:.85rem;text-align:center;padding:1.4rem;overflow:hidden}
+.ig-photo.has-img{padding:0;display:block}
+.ig-photo img{display:block;width:100%;height:100%;object-fit:cover}
 .ig-acts{display:flex;align-items:center;gap:.85rem;padding:.7rem .8rem .2rem}
 .ig-acts img{height:22px;width:auto;display:block}
 .ig-acts .save{margin-left:auto}
@@ -673,6 +677,7 @@ footer a:hover{color:#fff}
     <div class="abar"><h3>StudyEx admin</h3>
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
         <span id="syncState" class="mono" style="color:rgba(255,255,255,.7);font-size:.85rem"></span>
+        <button class="btn btn-out btn-sm" id="checkBtn">Check connection</button>
         <button class="btn btn-gold btn-sm" id="exportBtn">Export</button>
         <label class="btn btn-out btn-sm">Import<input type="file" id="importFile" accept="application/json" hidden></label>
         <button class="btn btn-out btn-sm" id="viewSite">View site</button>
@@ -709,21 +714,50 @@ function fetchRemote(){
         mem=remote; renderAll(); setSync('Loaded from Supabase');
       }
     })
-    .catch(function(){ setSync('Offline, showing local copy') });
+    .catch(function(){ setSync('Could not read from Supabase, showing the copy saved on this device') });
+}
+function sbError(r,j){
+  var msg=(j&&(j.message||j.error_description||j.error||j.hint))||('code '+r.status);
+  if(r.status===401||r.status===403) return 'Not allowed: '+msg+'. Sign in again, or check the table rules.';
+  if(r.status===404) return 'Table not found: create the table called site.';
+  if(r.status===409) return 'Conflict: '+msg;
+  return 'Save failed: '+msg;
 }
 function pushRemote(){
   var t=session();
-  if(!t||!t.access_token){ setSync('Not signed in, saved locally only'); return Promise.resolve(false) }
+  if(!t||!t.access_token){ setSync('Not signed in, saved on this device only'); return Promise.resolve(false) }
   setSync('Saving...');
-  return fetch(SB_URL+'/rest/v1/site',{method:'POST',
-      headers:Object.assign(sbHeaders(true),{'Prefer':'resolution=merge-duplicates,return=minimal'}),
-      body:JSON.stringify({id:ROW,data:mem})})
-    .then(function(r){
-      if(r.status===401||r.status===403){ setSync('Session expired, sign in again'); return false }
-      if(!r.ok){ setSync('Save failed, code '+r.status); return false }
-      setSync('Saved to Supabase '+new Date().toLocaleTimeString()); return true;
+  var hdr=Object.assign(sbHeaders(true),{'Prefer':'return=representation'});
+  return fetch(SB_URL+'/rest/v1/site?id=eq.'+ROW,{method:'PATCH',headers:hdr,body:JSON.stringify({data:mem})})
+    .then(function(r){ return r.json().catch(function(){return null}).then(function(j){ return {r:r,j:j} }) })
+    .then(function(res){
+      if(res.r.ok && Array.isArray(res.j) && res.j.length){
+        setSync('Saved to Supabase '+new Date().toLocaleTimeString()); return true;
+      }
+      if(res.r.ok){
+        return fetch(SB_URL+'/rest/v1/site',{method:'POST',headers:hdr,body:JSON.stringify({id:ROW,data:mem})})
+          .then(function(r2){ return r2.json().catch(function(){return null}).then(function(j2){ return {r:r2,j:j2} }) })
+          .then(function(res2){
+            if(res2.r.ok){ setSync('Saved to Supabase '+new Date().toLocaleTimeString()); return true }
+            setSync(sbError(res2.r,res2.j)); return false;
+          });
+      }
+      setSync(sbError(res.r,res.j)); return false;
     })
-    .catch(function(){ setSync('Save failed, check your connection'); return false });
+    .catch(function(){ setSync('Save failed, no connection to Supabase'); return false });
+}
+function checkConnection(){
+  setSync('Checking...');
+  fetch(SB_URL+'/rest/v1/site?id=eq.'+ROW+'&select=id',{headers:sbHeaders(false)})
+    .then(function(r){ return r.json().catch(function(){return null}).then(function(j){ return {r:r,j:j} }) })
+    .then(function(res){
+      if(!res.r.ok){ setSync('Read failed: '+sbError(res.r,res.j)); return }
+      var rows=Array.isArray(res.j)?res.j.length:0;
+      var t=session();
+      if(!t||!t.access_token){ setSync('Read works, '+rows+' row found, but you are not signed in'); return }
+      pushRemote().then(function(ok){ if(ok)setSync('All good. Read and write both working, '+rows+' row') });
+    })
+    .catch(function(){ setSync('Cannot reach Supabase from this device') });
 }
 function signIn(email,password){
   return fetch(SB_URL+'/auth/v1/token?grant_type=password',{method:'POST',
@@ -929,7 +963,7 @@ function renderHome(){
   var ig=d.successes.map(function(x){
     return '<article class="ig"><div class="ig-head"><div class="pfp">'+img(PFP,'studyexbd')+'</div>'+
       '<div class="who"><b>studyexbd</b><small>'+esc(x.location)+'</small></div><div class="more">&#8943;</div></div>'+
-      (x.photo?'<div class="ig-photo">'+img(x.photo,'')+'</div>':'<div class="ig-photo">Photo card waiting for this student</div>')+
+      (x.photo?'<div class="ig-photo has-img">'+img(x.photo,'')+'</div>':'<div class="ig-photo">Photo card waiting for this student</div>')+
       '<div class="ig-acts">'+img(IC.heart,'like')+img(IC.comment,'comment')+img(IC.share,'share')+
       '<span class="save">'+img(IC.save,'save')+'</span></div>'+
       '<div class="ig-body"><div class="cap"><b>studyexbd</b> '+esc(x.caption)+'</div>'+
@@ -973,17 +1007,33 @@ function toggleAcc(){
   b.textContent=s.classList.contains('collapsed')?'See all universities':'Show fewer';
 }
 function setupIgScroll(){
-  var el=document.getElementById('igScroll'); if(!el||el.dataset.wired)return; el.dataset.wired='1';
-  var timer=null, down=false, startX=0, startLeft=0;
-  function manual(){ el.classList.add('manual'); clearTimeout(timer);
-    timer=setTimeout(function(){ if(!down)el.classList.remove('manual') },2600) }
-  el.addEventListener('wheel',manual,{passive:true});
-  el.addEventListener('touchstart',manual,{passive:true});
-  el.addEventListener('touchend',manual,{passive:true});
-  el.addEventListener('scroll',manual,{passive:true});
-  el.addEventListener('pointerdown',function(e){ if(e.pointerType==='mouse'){down=true;startX=e.clientX;startLeft=el.scrollLeft;manual();e.preventDefault()} });
-  window.addEventListener('pointermove',function(e){ if(down){ el.scrollLeft=startLeft-(e.clientX-startX) } });
-  window.addEventListener('pointerup',function(){ if(down){down=false;manual()} });
+  var el=document.getElementById('igScroll'); if(!el)return;
+  if(el.dataset.wired){ el.scrollLeft=0; return }
+  el.dataset.wired='1';
+  var paused=false, down=false, startX=0, startLeft=0, timer=null;
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function half(){ var row=document.getElementById('igRow'); return row?row.scrollWidth/2:0 }
+  function pause(){ paused=true; clearTimeout(timer); timer=setTimeout(function(){ if(!down)paused=false },2600) }
+  function wrap(){
+    var w=half(); if(w<=0)return;
+    if(el.scrollLeft>=w) el.scrollLeft-=w;
+    else if(el.scrollLeft<0) el.scrollLeft+=w;
+  }
+  el.addEventListener('wheel',pause,{passive:true});
+  el.addEventListener('touchstart',pause,{passive:true});
+  el.addEventListener('touchmove',pause,{passive:true});
+  el.addEventListener('touchend',pause,{passive:true});
+  el.addEventListener('scroll',function(){ wrap() },{passive:true});
+  el.addEventListener('mouseenter',function(){ paused=true });
+  el.addEventListener('mouseleave',function(){ if(!down)paused=false });
+  el.addEventListener('pointerdown',function(e){ if(e.pointerType==='mouse'){down=true;paused=true;startX=e.clientX;startLeft=el.scrollLeft;e.preventDefault()} });
+  window.addEventListener('pointermove',function(e){ if(down){ el.scrollLeft=startLeft-(e.clientX-startX); wrap() } });
+  window.addEventListener('pointerup',function(){ if(down){down=false;pause()} });
+  if(reduce)return;
+  (function tick(){
+    if(!paused && document.getElementById('vHome').classList.contains('active')){ el.scrollLeft+=0.55; wrap() }
+    requestAnimationFrame(tick);
+  })();
 }
 function playVid(id){document.getElementById('videoBox').innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>'}
 function renderPages(){
@@ -1224,6 +1274,7 @@ document.getElementById('pw').onkeydown=function(e){if(e.key==='Enter')document.
 document.getElementById('em').onkeydown=function(e){if(e.key==='Enter')document.getElementById('pw').focus()};
 document.getElementById('logoutBtn').onclick=function(){setSession(null);location.hash='#/';location.reload()};
 document.getElementById('viewSite').onclick=function(){location.hash='#/'};
+document.getElementById('checkBtn').onclick=checkConnection;
 document.getElementById('exportBtn').onclick=function(){
   var b=new Blob([JSON.stringify(load(),null,2)],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(b);a.download='studyex-content.json';a.click()};
