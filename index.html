@@ -279,6 +279,8 @@ a.acc{text-decoration:none;cursor:pointer}
 .post-body p{margin:0 0 1.4rem}
 .post-body p:last-child{margin-bottom:0}
 .blog-grid a.post{text-decoration:none;color:inherit;display:block}
+.loading-note{color:var(--muted);font-family:var(--f-sub);font-size:1.02rem;padding:1.4rem 0}
+.on-dark .loading-note{color:rgba(255,255,255,.7)}
 
 /* ---------- verified tick ---------- */
 .ig-head .who b{display:flex;align-items:center;gap:4px}
@@ -805,10 +807,16 @@ function fetchRemote(){
         remote.settings=remote.settings||{}; for(var k2 in s.settings) if(!(k2 in remote.settings)) remote.settings[k2]=s.settings[k2];
         remote.copy=remote.copy||{}; for(var k3 in COPYDEF) if(!(k3 in remote.copy)) remote.copy[k3]=COPYDEF[k3];
         migrate(remote);
-        mem=remote; renderAll(); setSync('Loaded from Supabase');
+        delete remote.__partial;
+        mem=remote; usingSeed=false; booting=false;
+        persist();
+        renderAll(); setSync('Loaded from Supabase');
+        return;
       }
+      booting=false; renderAll();
     })
-    .catch(function(){ setSync('Could not read from Supabase, showing the copy saved on this device') });
+    .catch(function(){ booting=false; renderAll();
+      setSync('Could not read from Supabase, showing the copy saved on this device') });
 }
 function sbError(r,j){
   var msg=(j&&(j.message||j.error_description||j.error||j.hint))||('code '+r.status);
@@ -820,6 +828,10 @@ function sbError(r,j){
 function pushRemote(){
   var t=session();
   if(!t||!t.access_token){ setSync('Not signed in, saved on this device only'); return Promise.resolve(false) }
+  if(mem&&mem.__partial){
+    setSync('Still loading the pictures from Supabase. Wait a moment, then save again, so nothing is overwritten');
+    return Promise.resolve(false);
+  }
   setSync('Saving...');
   var hdr=Object.assign(sbHeaders(true),{'Prefer':'return=representation'});
   return fetch(SB_URL+'/rest/v1/site?id=eq.'+ROW,{method:'PATCH',headers:hdr,body:JSON.stringify({data:mem})})
@@ -1046,6 +1058,20 @@ function migrate(o){
   if(!o.experts)o.experts=seed().experts;
   return o;
 }
+/* The browser only gives a site about 5 MB. Once enough pictures are uploaded the content
+   no longer fits, so the full copy is tried first and a text only copy second. A text only
+   copy is marked partial, and a partial copy is never pushed back to Supabase. */
+function persist(){
+  try{ localStorage.setItem(KEY,JSON.stringify(mem)); return 'full' }catch(e){}
+  try{
+    localStorage.setItem(KEY,JSON.stringify(Object.assign({},mem,{__partial:true}),function(k,v){
+      return (typeof v==='string'&&v.slice(0,5)==='data:'&&v.length>2000)?'':v }));
+    return 'text';
+  }catch(e2){}
+  try{ localStorage.removeItem(KEY) }catch(e3){}
+  return 'none';
+}
+var usingSeed=false, booting=true;
 function load(){ if(mem)return mem;
   try{var r=localStorage.getItem(KEY); if(r){mem=JSON.parse(r); var s=seed();
     for(var k in s) if(!(k in mem)) mem[k]=s[k];
@@ -1053,8 +1079,15 @@ function load(){ if(mem)return mem;
     mem.copy=mem.copy||{}; for(var k3 in COPYDEF) if(!(k3 in mem.copy)) mem.copy[k3]=COPYDEF[k3];
     migrate(mem);
     return mem}}catch(e){}
-  mem=seed(); return mem }
-function save(){ try{localStorage.setItem(KEY,JSON.stringify(mem))}catch(e){} renderAll(); pushRemote() }
+  mem=seed(); usingSeed=true; return mem }
+function save(){
+  var kept=persist();
+  renderAll();
+  pushRemote().then(function(ok){
+    if(ok&&kept==='text')setSync('Saved to Supabase. This device could only keep the text, so pictures load from Supabase each visit');
+    if(ok&&kept==='none')setSync('Saved to Supabase. This device could not keep a copy, so the page loads everything from Supabase');
+  });
+}
 function esc(s){return (s==null?'':''+s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function img(src,alt,cls){return '<img src="'+src+'" alt="'+esc(alt||'')+'"'+(cls?' class="'+cls+'"':'')+'>'}
 function slot(txt,cls){return '<div class="slot '+(cls||'')+'">'+esc(txt)+'</div>'}
@@ -1122,6 +1155,9 @@ function renderHome(){
     : '<div style="height:100%;display:grid;place-items:center;text-align:center;color:rgba(255,255,255,.7)"><div><i style="display:grid;place-items:center;width:88px;height:88px;border-radius:50%;background:var(--gold-soft);color:var(--navy);font-style:normal;font-size:1.8rem;margin:0 auto 1rem">&#9654;</i>Add a YouTube link in the admin panel</div></div>';
 
   var p=d.posts[0]||{};
+  if(usingSeed&&booting){
+    document.getElementById('featPost').innerHTML='<div class="loading-note">Loading the latest post</div>';
+  } else
   document.getElementById('featPost').innerHTML=
     (p.cover?'<div class="cover">'+img(p.cover,'')+'</div>':'<div class="cover slot" style="aspect-ratio:4/3">Cover image</div>')+
     '<div><div class="cat">'+esc(p.cat||'')+'</div><h2 style="font-size:clamp(2rem,3.4vw,2.8rem)">'+esc(p.title||'')+'</h2>'+
@@ -1219,7 +1255,9 @@ function renderPages(){
   var d=load(), s=d.settings;
   document.getElementById('toolGrid').innerHTML=d.tools.map(function(t){
     return '<a class="tool rv" href="'+(t.url||'#/soon/'+slug(t.title))+'"'+(t.url?' target="_blank" rel="noopener"':'')+'><h3>'+esc(t.title)+'</h3><p>'+esc(t.desc)+'</p><span class="go">'+(t.url?'Open the tool':'Still being built')+'</span></a>'}).join('');
-  document.getElementById('blogGrid').innerHTML=d.posts.map(function(p,i){ return postCard(p,i) }).join('');
+  document.getElementById('blogGrid').innerHTML=(usingSeed&&booting)
+    ? '<div class="loading-note">Loading the guides</div>'
+    : d.posts.map(function(p,i){ return postCard(p,i) }).join('');
   document.getElementById('teamGrid').innerHTML=d.team.map(function(m){
     return '<div class="member rv">'+(m.photo?'<div class="ph">'+img(m.photo,m.name)+'</div>':'<div class="ph slot" style="aspect-ratio:3/4">Photo</div>')+
       '<h3>'+esc(m.name)+'</h3><div class="role">'+esc(m.role)+'</div><p>'+esc(m.bio||'')+'</p></div>'}).join('');
