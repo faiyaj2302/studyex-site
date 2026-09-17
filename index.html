@@ -93,6 +93,41 @@ img{max-width:100%}
 .btn-ghost.btn-sm{box-shadow:5px 5px 0 rgba(5,29,65,.18)}.btn-ghost.btn-sm:hover{box-shadow:3px 3px 0 rgba(5,29,65,.18)}
 .btn-navy.btn-sm{box-shadow:5px 5px 0 var(--gold-soft)}.btn-navy.btn-sm:hover{box-shadow:3px 3px 0 var(--gold-soft)}
 
+/* ---------- opening animation ----------
+   Dream, Apply, Fly, then the logo. 1150ms in total, then it lifts away.
+   The words turn like a cube face and the navy deepens and lifts behind them. */
+html.pl-lock,html.pl-lock body{overflow:hidden}
+.pl{position:fixed;inset:0;z-index:300;display:grid;place-items:center;background:#051D41;
+  animation:pl-bg 1150ms ease-in-out both,pl-out 340ms cubic-bezier(.4,0,.2,1) 1150ms forwards}
+@keyframes pl-bg{
+  0%{background-color:#051D41}
+  32%{background-color:#0A2B5C}
+  62%{background-color:#10397A}
+  100%{background-color:#061F45}}
+@keyframes pl-out{to{opacity:0;visibility:hidden}}
+.pl-stage{position:relative;width:min(92vw,900px);height:1.3em;perspective:1000px;
+  font-family:var(--f-title);font-size:clamp(2.4rem,8.5vw,5.2rem);line-height:1.3;text-align:center}
+.pl-word,.pl-final{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#FFFDF8;opacity:0;will-change:transform,opacity}
+.pl-final{gap:.42em}
+.pl-word:after{content:".";color:var(--gold-soft)}
+@keyframes pl-roll{
+  0%{opacity:0;transform:translateY(58%) rotateX(-74deg)}
+  20%{opacity:1;transform:none}
+  70%{opacity:1;transform:none}
+  100%{opacity:0;transform:translateY(-58%) rotateX(74deg)}}
+@keyframes pl-land{
+  0%{opacity:0;transform:translateY(46%) rotateX(-70deg)}
+  100%{opacity:1;transform:none}}
+.pl-w1{animation:pl-roll 380ms cubic-bezier(.3,.8,.3,1) 0ms both}
+.pl-w2{animation:pl-roll 380ms cubic-bezier(.3,.8,.3,1) 260ms both}
+.pl-w3{animation:pl-roll 380ms cubic-bezier(.3,.8,.3,1) 520ms both}
+.pl-final{animation:pl-land 320ms cubic-bezier(.2,.75,.3,1) 830ms both}
+.pl-final img{height:clamp(46px,9vw,74px);width:auto}
+.pl-name{font-family:var(--f-title);font-weight:700;letter-spacing:.01em}
+.pl-name em{font-style:normal;color:var(--gold-soft)}
+@media (prefers-reduced-motion:reduce){.pl{display:none}}
+
 /* ---------- header ---------- */
 header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-l)}
 .top-in{display:flex;align-items:center;justify-content:space-between;gap:1.4rem;max-width:var(--wrap);margin:0 auto;padding:.85rem 2rem}
@@ -523,6 +558,15 @@ footer a:hover{color:#fff}
 </style>
 </head>
 <body>
+
+<div class="pl" id="preload" aria-hidden="true">
+  <div class="pl-stage">
+    <span class="pl-word pl-w1">Dream</span>
+    <span class="pl-word pl-w2">Apply</span>
+    <span class="pl-word pl-w3">Fly</span>
+    <span class="pl-final"><img id="plLogo" alt=""><span class="pl-name">Study<em>Ex</em></span></span>
+  </div>
+</div>
 
 <header class="top">
   <div class="top-in">
@@ -1660,6 +1704,24 @@ document.getElementById('importFile').onchange=function(e){
   r.readAsText(f)};
 
 renderAll(); route(); fetchRemote();
+
+/* the opening animation, 1150ms, then it lifts away and the page is yours */
+(function(){
+  var pl=document.getElementById('preload'); if(!pl)return;
+  function drop(){ if(pl&&pl.parentNode){ pl.parentNode.removeChild(pl); pl=null }
+    document.documentElement.classList.remove('pl-lock') }
+  if(location.hash.indexOf('#/admin')===0){ drop(); return }
+  var lg=document.getElementById('plLogo');
+  if(lg){ try{ lg.src=(load().settings||{}).headerLogo||LOGO_W }catch(e){ lg.src=LOGO_W } }
+  var nm=pl.querySelector('.pl-name'), c=(load().copy||{}).brandName;
+  if(nm&&c)nm.innerHTML=c;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ drop(); return }
+  document.documentElement.classList.add('pl-lock');
+  setTimeout(function(){ document.documentElement.classList.remove('pl-lock') },1150);
+  /* wait for the lift to finish before taking the screen away, so it never pops */
+  pl.addEventListener('animationend',function(e){ if(e.animationName==='pl-out')drop() });
+  setTimeout(drop,4000);
+})();
 </script>
 </body>
 </html>
