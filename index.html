@@ -773,6 +773,7 @@ footer a:hover{color:#fff}
       <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
         <span id="syncState" class="mono" style="color:rgba(255,255,255,.7);font-size:.85rem"></span>
         <button class="btn btn-out btn-sm" id="checkBtn">Check connection</button>
+        <button class="btn btn-out btn-sm" id="migrateBtn">Move pictures to Storage</button>
         <button class="btn btn-gold btn-sm" id="exportBtn">Export</button>
         <label class="btn btn-out btn-sm">Import<input type="file" id="importFile" accept="application/json" hidden></label>
         <button class="btn btn-out btn-sm" id="viewSite">View site</button>
@@ -817,6 +818,114 @@ function fetchRemote(){
     })
     .catch(function(){ booting=false; renderAll();
       setSync('Could not read from Supabase, showing the copy saved on this device') });
+}
+/* ================= PICTURES =================
+   Photos are shrunk in the browser, then uploaded to the Supabase Storage bucket below.
+   The content file then holds a short link instead of the whole picture, so the site
+   loads in a moment and each photo is cached by the browser on its own.
+   If the upload fails for any reason, the picture is kept inside the content as before,
+   so nothing is ever lost. */
+var BUCKET='media', MAXSIDE=1600, QUALITY=.82, pictureWarning='';
+function fileToImage(file){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file), im=new Image();
+    im.onload=function(){ URL.revokeObjectURL(url); res(im) };
+    im.onerror=function(){ URL.revokeObjectURL(url); rej(new Error('That file could not be read as a picture')) };
+    im.src=url;
+  });
+}
+/* logos and flags need their see through background kept, photographs do not */
+function hasAlpha(cv){
+  try{
+    var d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
+    for(var i=3;i<d.length;i+=52) if(d[i]<250) return true;
+    return false;
+  }catch(e){ return true }
+}
+function shrink(file){
+  if(!file||!/^image\//.test(file.type)||/svg|gif/.test(file.type)) return Promise.resolve(file);
+  return fileToImage(file).then(function(im){
+    var w=im.naturalWidth||im.width, h=im.naturalHeight||im.height;
+    var r=Math.min(1,MAXSIDE/Math.max(w,h));
+    var cv=document.createElement('canvas');
+    cv.width=Math.max(1,Math.round(w*r)); cv.height=Math.max(1,Math.round(h*r));
+    cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);
+    var keepPng=/png/.test(file.type)&&hasAlpha(cv);
+    return new Promise(function(res){
+      cv.toBlob(function(b){ res(!b?file:((b.size<file.size||r<1)?b:file)) }, keepPng?'image/png':'image/jpeg', QUALITY);
+    });
+  }).catch(function(){ return file });
+}
+function blobToDataUrl(b){
+  return new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){res(r.result)}; r.onerror=rej; r.readAsDataURL(b) });
+}
+function dataUrlToBlob(u){
+  var parts=u.split(','), mime=(parts[0].match(/:(.*?);/)||[0,'image/jpeg'])[1];
+  var bin=atob(parts[1]), n=bin.length, arr=new Uint8Array(n);
+  while(n--) arr[n]=bin.charCodeAt(n);
+  return new Blob([arr],{type:mime});
+}
+function extFor(type){
+  return type==='image/png'?'png':type==='image/webp'?'webp':type==='image/svg+xml'?'svg':type==='image/gif'?'gif':'jpg';
+}
+function uploadBlob(blob,hint){
+  var t=session();
+  if(!t||!t.access_token) return Promise.reject(new Error('not signed in'));
+  var name=(hint||'picture').replace(/[^a-z0-9-]+/gi,'-').toLowerCase()+
+    '-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)+'.'+extFor(blob.type);
+  return fetch(SB_URL+'/storage/v1/object/'+BUCKET+'/'+name,{method:'POST',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+t.access_token,
+               'Content-Type':blob.type||'image/jpeg','x-upsert':'true'},
+      body:blob})
+    .then(function(r){
+      if(r.ok) return SB_URL+'/storage/v1/object/public/'+BUCKET+'/'+name;
+      return r.json().catch(function(){return{}}).then(function(j){
+        throw new Error(j.message||j.error||('code '+r.status)) });
+    });
+}
+function storePicture(file,hint){
+  setSync('Preparing the picture...');
+  return shrink(file).then(function(b){
+    setSync('Uploading the picture...');
+    return uploadBlob(b,hint)
+      .then(function(url){ setSync('Picture uploaded'); return url })
+      .catch(function(e){
+        pictureWarning='Storage did not accept the picture ('+e.message+'), so it was kept inside the content instead';
+        setSync(pictureWarning);
+        return blobToDataUrl(b);
+      });
+  });
+}
+/* one click move of every picture already sitting inside the content */
+function migratePictures(){
+  var t=session();
+  if(!t||!t.access_token){ setSync('Sign in first'); return }
+  var d=load();
+  if(d.__partial){ setSync('Still loading the pictures from Supabase. Wait a moment and try again'); return }
+  var jobs=[];
+  (function walk(o){
+    if(!o||typeof o!=='object')return;
+    Object.keys(o).forEach(function(k){
+      var v=o[k];
+      if(typeof v==='string'){ if(v.slice(0,11)==='data:image/') jobs.push({o:o,k:k,v:v}) }
+      else if(v&&typeof v==='object') walk(v);
+    });
+  })(d);
+  if(!jobs.length){ setSync('Nothing to move, every picture is already on Storage'); return }
+  var i=0, failed=0;
+  (function next(){
+    if(i>=jobs.length){
+      var done='Moved '+(jobs.length-failed)+' of '+jobs.length+' pictures to Storage';
+      setSync(done);
+      save().then(function(){ setSync(done) });
+      return;
+    }
+    var job=jobs[i++], blob;
+    setSync('Moving picture '+i+' of '+jobs.length+'...');
+    try{ blob=dataUrlToBlob(job.v) }catch(e){ failed++; return next() }
+    uploadBlob(blob,'moved').then(function(url){ job.o[job.k]=url; next() })
+      .catch(function(e){ failed++; setSync('Upload failed: '+e.message); setTimeout(next,400) });
+  })();
 }
 function sbError(r,j){
   var msg=(j&&(j.message||j.error_description||j.error||j.hint))||('code '+r.status);
@@ -1083,7 +1192,8 @@ function load(){ if(mem)return mem;
 function save(){
   var kept=persist();
   renderAll();
-  pushRemote().then(function(ok){
+  return pushRemote().then(function(ok){
+    if(ok&&pictureWarning){ setSync('Saved to Supabase. '+pictureWarning); pictureWarning=''; return }
     if(ok&&kept==='text')setSync('Saved to Supabase. This device could only keep the text, so pictures load from Supabase each visit');
     if(ok&&kept==='none')setSync('Saved to Supabase. This device could not keep a copy, so the page loads everything from Supabase');
   });
@@ -1474,7 +1584,10 @@ function readFiles(key,cb){
   files.forEach(function(f){
     var el=document.getElementById('f_'+key+'_'+f.k), file=el&&el.files[0];
     if(!file){out[f.k]='';if(--n===0)cb(out);return}
-    var r=new FileReader(); r.onload=function(){out[f.k]=r.result;if(--n===0)cb(out)}; r.readAsDataURL(file)});
+    storePicture(file,key+'-'+f.k)
+      .then(function(v){ out[f.k]=v; if(--n===0)cb(out) })
+      .catch(function(){ out[f.k]=''; if(--n===0)cb(out) });
+  });
 }
 function saveItem(key){
   var d=load(), S=SCHEMA[key];
@@ -1537,6 +1650,7 @@ document.getElementById('em').onkeydown=function(e){if(e.key==='Enter')document.
 document.getElementById('logoutBtn').onclick=function(){setSession(null);location.hash='#/';location.reload()};
 document.getElementById('viewSite').onclick=function(){location.hash='#/'};
 document.getElementById('checkBtn').onclick=checkConnection;
+document.getElementById('migrateBtn').onclick=migratePictures;
 document.getElementById('exportBtn').onclick=function(){
   var b=new Blob([JSON.stringify(load(),null,2)],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(b);a.download='studyex-content.json';a.click()};
