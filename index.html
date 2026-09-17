@@ -198,6 +198,7 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 .acc.has-bg .num,.on-dark .acc.has-bg .num{color:var(--gold-soft);text-shadow:0 1px 4px rgba(2,16,31,.9)}
 .acc.has-bg .fl{text-shadow:0 1px 4px rgba(2,16,31,.7)}
 .acc.has-bg:hover{border-color:var(--gold)}
+a.acc{text-decoration:none;cursor:pointer}
 
 /* ---------- video ---------- */
 .video{position:relative;border-radius:34px;overflow:hidden;margin-top:3rem;background:var(--navy-mid);
@@ -261,6 +262,23 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 .svc-art .word{position:absolute;left:19%;bottom:.6rem;right:7%;color:#fff;font-weight:700;font-family:var(--f-title);
   font-size:clamp(2rem,4vw,3.2rem);line-height:.9;z-index:3}
 .svc-art .idx{position:absolute;left:19%;top:20%;color:rgba(255,255,255,.18);font-family:var(--f-title);font-size:9rem;line-height:1;z-index:2}
+
+/* ---------- one blog post ---------- */
+.post-head{background:var(--navy);color:#fff;padding:4rem 0 3.4rem}
+.post-head .back-link{color:var(--gold-soft);font-family:var(--f-sub);font-size:.95rem;text-decoration:none;
+  display:inline-block;margin-bottom:2rem}
+.post-head .back-link:hover{color:#fff}
+.post-head .cat{color:var(--gold);font-family:var(--f-sub);font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.post-head h1{color:#fff;font-size:clamp(2.2rem,5.4vw,4rem);margin-top:.9rem;line-height:1.12}
+.post-head p{color:rgba(255,255,255,.78);max-width:58ch;margin-top:1.3rem;font-size:1.12rem}
+.post-cover{margin-top:-2.6rem;border-radius:28px;overflow:hidden;box-shadow:16px 16px 34px rgba(5,29,65,.18);
+  aspect-ratio:16/8;max-height:520px}
+.post-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.post-cover:empty{display:none}
+.post-body{max-width:70ch;font-size:1.12rem;line-height:1.85;color:var(--ink)}
+.post-body p{margin:0 0 1.4rem}
+.post-body p:last-child{margin-bottom:0}
+.blog-grid a.post{text-decoration:none;color:inherit;display:block}
 
 /* ---------- verified tick ---------- */
 .ig-head .who b{display:flex;align-items:center;gap:4px}
@@ -684,6 +702,25 @@ footer a:hover{color:#fff}
   <section class="section"><div class="wrap"><div class="blog-grid" id="blogGrid"></div></div></section>
 </main>
 
+<!-- ==================== ONE BLOG POST ==================== -->
+<main class="view" id="vPost">
+  <div class="post-head"><div class="wrap">
+    <a class="back-link" href="#/blog">Back to all guides</a>
+    <div class="cat" id="postCat"></div>
+    <h1 id="postTitle"></h1>
+    <p id="postSum"></p>
+  </div></div>
+  <div class="wrap"><div class="post-cover" id="postCover"></div></div>
+  <section class="section"><div class="wrap">
+    <article class="post-body rv" id="postBody"></article>
+  </div></section>
+  <section class="section" id="postMoreSec" style="background:var(--cream-deep)"><div class="wrap">
+    <h2 class="rv" data-copy="moreTitle"></h2>
+    <p class="lede rv" data-copy="moreLede"></p>
+    <div class="blog-grid" id="postMore"></div>
+  </div></section>
+</main>
+
 <!-- ==================== TEAM ==================== -->
 <main class="view" id="vTeam">
   <div class="page-head"><div class="wrap"><h1 data-copy="teamTitle"></h1>
@@ -859,6 +896,7 @@ var COPYDEF={
  foundersTitle:'Founders', foundersLede:'The three people who started StudyEx and still sit in on consultations.',
  teamSecTitle:'Team', teamSecLede:'Counsellors and coordinators who chase your file for you, from first meeting to departure.',
  expertsTitle:'Experts', expertsLede:'Specialists we bring in for writing, test preparation and country specific advice.',
+ moreTitle:'Keep reading', moreLede:'Other guides from the same desk.',
  soonTitle:'Free tools', soonLede:'A few of these are still being built. Everything else on this page is ready to use.',
  soonEyebrow:'Free tools', soonHeading:'Still being built',
  soonText:'We are still working on this one, and we would rather hand it to you finished than half done. It will be here soon. In the meantime, ask us your question directly and a counsellor will answer it properly.',
@@ -888,6 +926,7 @@ var COPYLABELS={
  foundersTitle:'Founders heading', foundersLede:'Founders intro',
  teamSecTitle:'Team section heading', teamSecLede:'Team section intro',
  expertsTitle:'Experts heading', expertsLede:'Experts intro',
+ moreTitle:'Suggested posts heading', moreLede:'Suggested posts intro',
  soonTitle:'Still being built, page heading', soonLede:'Still being built, page intro',
  soonEyebrow:'Still being built, small label', soonHeading:'Still being built, big line',
  soonText:'Still being built, paragraph', soonBtn:'Still being built, button label',
@@ -955,7 +994,7 @@ function seed(){return {
  countries:[{flag:'🇲🇾',name:'Malaysia'},{flag:'🇰🇷',name:'South Korea'},{flag:'🇭🇰',name:'Hong Kong'},
    {flag:'🇹🇷',name:'Turkey'},{flag:'🇭🇺',name:'Hungary'},{flag:'🇩🇪',name:'Germany'},{flag:'🇫🇮',name:'Finland'},
    {flag:'🇮🇹',name:'Italy'},{flag:'🇲🇹',name:'Malta'},{flag:'🇦🇺',name:'Australia'},{flag:'🇨🇦',name:'Canada'},{flag:'🇺🇸',name:'United States'}],
- acceptances:[{flag:'🇲🇾',name:'University of Malaya',n:0,bg:'',veil:''},{flag:'🇲🇾',name:'Universiti Putra Malaysia',n:0},
+ acceptances:[{flag:'🇲🇾',name:'University of Malaya',n:0,url:'',bg:'',veil:''},{flag:'🇲🇾',name:'Universiti Putra Malaysia',n:0},
    {flag:'🇲🇾',name:'Universiti Kebangsaan Malaysia',n:0},{flag:'🇲🇾',name:'Universiti Sains Malaysia',n:0},
    {flag:'🇰🇷',name:'Hanyang University',n:0},{flag:'🇰🇷',name:'Kyung Hee University',n:0},
    {flag:'🇭🇰',name:'The University of Hong Kong',n:0},{flag:'🇭🇺',name:'University of Debrecen',n:0},
@@ -1021,6 +1060,13 @@ function img(src,alt,cls){return '<img src="'+src+'" alt="'+esc(alt||'')+'"'+(cl
 function slot(txt,cls){return '<div class="slot '+(cls||'')+'">'+esc(txt)+'</div>'}
 /* an opacity the admin typed, or the default if the box was left empty */
 function op(v,dflt){ if(v===''||v==null)return dflt; var n=parseFloat(v); return isNaN(n)?dflt:Math.max(0,Math.min(1,n)) }
+/* a post is found by its title, or by its position if two posts share a title */
+function postKey(p,i){ var k=slug(p&&p.title); return k||String(i) }
+function postCard(p,i){
+  return '<a class="post rv" href="#/post/'+postKey(p,i)+'">'+
+    (p.cover?'<div class="cover">'+img(p.cover,'')+'</div>':'<div class="cover slot" style="aspect-ratio:16/10">Cover image</div>')+
+    '<div class="body"><div class="cat">'+esc(p.cat)+'</div><h3>'+esc(p.title)+'</h3><p>'+esc(p.sum)+'</p></div></a>';
+}
 /* a tool title turned into a link friendly name */
 function slug(t){ return (t||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') }
 
@@ -1062,9 +1108,13 @@ function renderHome(){
   document.getElementById('accGrid').innerHTML=d.acceptances.map(function(a){
     var fl=(a.flag||'').indexOf('data:')===0? '<span class="fl">'+img(a.flag,'')+'</span>':'<span class="fl">'+esc(a.flag)+'</span>';
     /* the navy veil never goes below 0.35, so the university name and number stay readable on any photo */
-    var veil=a.bg? '<span class="veil" style="opacity:'+Math.max(op(a.veil,.72),.35)+'"></span>' : '';
-    var open=a.bg? '<div class="acc rv has-bg" style="background-image:url('+a.bg+')">' : '<div class="acc rv">';
-    return open+veil+fl+'<span class="nm">'+esc(a.name)+'</span><span class="num" data-count="'+(a.n||0)+'">0</span></div>'}).join('');
+    var veil=a.bg? '<span class="veil" style="opacity:'+Math.max(op(a.veil,.75),.35)+'"></span>' : '';
+    var cls='acc rv'+(a.bg?' has-bg':''), st=a.bg?' style="background-image:url('+a.bg+')"':'';
+    var open=a.url
+      ? '<a class="'+cls+'" href="'+esc(a.url)+'" target="_blank" rel="noopener"'+st+'>'
+      : '<div class="'+cls+'"'+st+'>';
+    var shut=a.url?'</a>':'</div>';
+    return open+veil+fl+'<span class="nm">'+esc(a.name)+'</span><span class="num" data-count="'+(a.n||0)+'">0</span>'+shut}).join('');
 
   var id=ytId(s.youtube);
   document.getElementById('videoBox').innerHTML = id
@@ -1075,7 +1125,7 @@ function renderHome(){
   document.getElementById('featPost').innerHTML=
     (p.cover?'<div class="cover">'+img(p.cover,'')+'</div>':'<div class="cover slot" style="aspect-ratio:4/3">Cover image</div>')+
     '<div><div class="cat">'+esc(p.cat||'')+'</div><h2 style="font-size:clamp(2rem,3.4vw,2.8rem)">'+esc(p.title||'')+'</h2>'+
-    '<p style="margin-top:1.2rem;color:var(--muted)">'+esc(p.sum||'')+'</p><a class="btn btn-navy" href="#/blog">Read the post</a></div>';
+    '<p style="margin-top:1.2rem;color:var(--muted)">'+esc(p.sum||'')+'</p><a class="btn btn-navy" href="#/post/'+postKey(p,0)+'">Read the post</a></div>';
 
   var ig=d.successes.map(function(x){
     return '<article class="ig"><div class="ig-head"><div class="pfp">'+img(PFP,'studyexbd')+'</div>'+
@@ -1169,9 +1219,7 @@ function renderPages(){
   var d=load(), s=d.settings;
   document.getElementById('toolGrid').innerHTML=d.tools.map(function(t){
     return '<a class="tool rv" href="'+(t.url||'#/soon/'+slug(t.title))+'"'+(t.url?' target="_blank" rel="noopener"':'')+'><h3>'+esc(t.title)+'</h3><p>'+esc(t.desc)+'</p><span class="go">'+(t.url?'Open the tool':'Still being built')+'</span></a>'}).join('');
-  document.getElementById('blogGrid').innerHTML=d.posts.map(function(p){
-    return '<article class="post rv">'+(p.cover?'<div class="cover">'+img(p.cover,'')+'</div>':'<div class="cover slot" style="aspect-ratio:16/10">Cover image</div>')+
-      '<div class="body"><div class="cat">'+esc(p.cat)+'</div><h3>'+esc(p.title)+'</h3><p>'+esc(p.sum)+'</p></div></article>'}).join('');
+  document.getElementById('blogGrid').innerHTML=d.posts.map(function(p,i){ return postCard(p,i) }).join('');
   document.getElementById('teamGrid').innerHTML=d.team.map(function(m){
     return '<div class="member rv">'+(m.photo?'<div class="ph">'+img(m.photo,m.name)+'</div>':'<div class="ph slot" style="aspect-ratio:3/4">Photo</div>')+
       '<h3>'+esc(m.name)+'</h3><div class="role">'+esc(m.role)+'</div><p>'+esc(m.bio||'')+'</p></div>'}).join('');
@@ -1238,7 +1286,26 @@ function count(el){
 }
 
 /* ================= ROUTER ================= */
-var views={'#/':'vHome','#/tools':'vTools','#/blog':'vBlog','#/team':'vTeam','#/soon':'vSoon'};
+var views={'#/':'vHome','#/tools':'vTools','#/blog':'vBlog','#/team':'vTeam','#/soon':'vSoon','#/post':'vPost'};
+function renderPost(key){
+  var d=load(), list=d.posts||[], i=-1;
+  if(/^\d+$/.test(key)) i=parseInt(key,10);
+  else list.forEach(function(p,j){ if(i<0&&postKey(p,j)===key) i=j });
+  if(i<0||i>=list.length) i=0;
+  var p=list[i]||{};
+  document.getElementById('postCat').textContent=p.cat||'';
+  document.getElementById('postTitle').textContent=p.title||'';
+  document.getElementById('postSum').textContent=p.sum||'';
+  document.getElementById('postCover').innerHTML=p.cover?img(p.cover,p.title||''):'';
+  var text=(p.body&&p.body.trim())?p.body:(p.sum||'');
+  document.getElementById('postBody').innerHTML=text
+    ? esc(text).split(/\n\s*\n/).map(function(par){ return '<p>'+par.replace(/\n/g,'<br>')+'</p>' }).join('')
+    : '<p>This post is still being written.</p>';
+  var others=list.map(function(x,j){return {p:x,j:j}}).filter(function(o){return o.j!==i}).slice(0,3);
+  var sec=document.getElementById('postMoreSec');
+  sec.style.display=others.length?'':'none';
+  document.getElementById('postMore').innerHTML=others.map(function(o){ return postCard(o.p,o.j) }).join('');
+}
 function renderSoon(name){
   var d=load(), which='';
   (d.tools||[]).forEach(function(t){ if(slug(t.title)===name) which=t.title });
@@ -1252,6 +1319,7 @@ function route(){
   if(h==='#/admin'){openAdmin();return} else closeAdmin(true);
   var anchor=null;
   if(h.indexOf('#/soon')===0){ renderSoon(decodeURIComponent(h.slice(7)||'')); h='#/soon' }
+  if(h.indexOf('#/post')===0){ renderPost(decodeURIComponent(h.slice(7)||'')); h='#/post' }
   if(h.indexOf('#/#')===0){anchor=h.slice(2);h='#/'}
   else if(h.charAt(1)!=='/'){anchor=h;h='#/'}
   var id=views[h]||'vHome';
@@ -1296,7 +1364,8 @@ var SCHEMA={
     {k:'flagImg',l:'Flag image, optional',t:'file'}],title:'name',sub:'url'},
   acceptances:{label:'Acceptances',group:'Home page',fields:[{k:'flag',l:'Flag emoji'},{k:'name',l:'University'},{k:'n',l:'Acceptances',t:'number'},
     {k:'bg',l:'Background picture, optional',t:'file'},
-    {k:'veil',l:'Navy overlay opacity, 0.35 to 1. Empty means 0.72. Lower shows more of the picture'}],title:'name',sub:'n',thumb:'bg'},
+    {k:'url',l:'Link this university opens, optional'},
+    {k:'veil',l:'Navy overlay opacity, 0.35 to 1. Empty means 0.75. Lower shows more of the picture'}],title:'name',sub:'n',thumb:'bg'},
   successes:{label:'Instagram posts',group:'Home page',fields:[{k:'photo',l:'Student photo',t:'file'},{k:'caption',l:'Caption',t:'area'},
     {k:'location',l:'City and country'},{k:'date',l:'Date line, for example 2 days ago'}],title:'location',sub:'caption',thumb:'photo'},
   services:{label:'Services',group:'Home page',fields:[{k:'title',l:'Tab title'},{k:'word',l:'Big word on the graphic'},
