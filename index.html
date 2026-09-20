@@ -584,8 +584,8 @@ footer a:hover{color:#fff}
   .divider{padding:1rem 0}
   .divider .wrap{flex-direction:row;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
   .divider .disp{font-size:1.15rem}
-  .div-sand{padding:1.4rem 0}
-  .div-sand .disp{font-size:1.6rem}
+  .div-sand{padding:2.1rem 0}
+  .div-sand .disp{font-size:1.75rem}
   #contact{padding:2.2rem 0}
   #contact .lede{margin-top:.8rem}
   #contact .cta-pair{margin-top:1.2rem!important;gap:.7rem!important}
@@ -1404,6 +1404,12 @@ function load(){ if(mem)return mem;
     mem.copy=mem.copy||{}; for(var k3 in COPYDEF) if(!(k3 in mem.copy)) mem.copy[k3]=COPYDEF[k3];
     mem.legal=mem.legal||{}; for(var k4 in LEGALDEF) if(!(k4 in mem.legal)) mem.legal[k4]=LEGALDEF[k4];
     mem.faqs=mem.faqs||s.faqs;
+    mem.sections=mem.sections||s.sections;
+    (s.sections||[]).forEach(function(def,i){
+      var has=mem.sections.some(function(x){return x.key===def.key});
+      if(!has){ var at=Math.min(i,mem.sections.length); mem.sections.splice(at,0,JSON.parse(JSON.stringify(def))) }
+    });
+    mem.sections=mem.sections.filter(function(x){ return s.sections.some(function(def){return def.key===x.key}) });
     migrate(mem);
     return mem}}catch(e){}
   mem=seed(); usingSeed=true; return mem }
@@ -1852,7 +1858,6 @@ var SCHEMA={
     {k:'privBody',l:'Privacy policy text',t:'area'},
     {k:'termTitle',l:'Terms page title'},{k:'termLede',l:'Terms page intro',t:'area'},
     {k:'termBody',l:'Terms and conditions text',t:'area'}]},
-  faqs:{label:'Questions and answers',group:'Home page',fields:[{k:'q',l:'Question'},{k:'a',l:'Answer',t:'area'}],title:'q',sub:'a'},
   fonts:{label:'Fonts',single:true,group:'Basics',fields:[
     {k:'fontTitle',l:'Headings font',t:'select',opts:FONTOPTS},
     {k:'fontName',l:'Country and student names font',t:'select',opts:FONTOPTS},
@@ -1877,6 +1882,7 @@ var SCHEMA={
     {k:'bgFold',l:'Background opacity when the card is closed, 0 to 1. Empty means 0.2'},
     {k:'bgFull',l:'Background opacity when the card is open, 0 to 1. Empty means 0.6. It fades in from the left so the name and portrait stay clear'}],
     title:'name',sub:'uni',thumb:'photo'},
+  faqs:{label:'Questions and answers',group:'Home page',fields:[{k:'q',l:'Question'},{k:'a',l:'Answer',t:'area'}],title:'q',sub:'a'},
   tools:{label:'Tools and buttons',group:'Other pages',fields:[{k:'title',l:'Button label'},{k:'desc',l:'Short description',t:'area'},{k:'url',l:'Link it opens'}],title:'title',sub:'url'},
   posts:{label:'Blog posts',group:'Other pages',fields:[{k:'title',l:'Title'},{k:'cat',l:'Category'},{k:'sum',l:'Card summary',t:'area'},
     {k:'body',l:'Full post',t:'area'},{k:'cover',l:'Cover image',t:'file'}],title:'title',sub:'cat',thumb:'cover'},
@@ -1922,6 +1928,14 @@ function buildAdmin(){
     }
     panes+='<div class="pane'+(on?' active':'')+'" id="pane_'+key+'">'+form+list+'</div>';
   });
+  tabs+='<h5>Inbox</h5><button class="tab" data-p="pane_leads">Enquiries</button>';
+  panes+='<div class="pane" id="pane_leads">'+
+    '<div class="cardA"><h3>Enquiries from the website</h3>'+
+    '<p class="note">Everything sent through the form on the homepage. Newest first.</p>'+
+    '<div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1rem">'+
+    '<button class="btn btn-navy btn-sm" onclick="loadLeads()">Refresh</button>'+
+    '<button class="btn btn-ghost btn-sm" onclick="exportLeads()">Download as CSV</button></div></div>'+
+    '<div id="leadList"><p class="note">Press Refresh to load.</p></div></div>';
   document.getElementById('tabs').innerHTML=tabs;
   document.getElementById('panes').innerHTML=panes;
   document.querySelectorAll('#tabs .tab').forEach(function(t){t.onclick=function(){
@@ -2004,6 +2018,37 @@ document.getElementById('logoutBtn').onclick=function(){setSession(null);locatio
 document.getElementById('viewSite').onclick=function(){location.hash='#/'};
 document.getElementById('checkBtn').onclick=checkConnection;
 document.getElementById('migrateBtn').onclick=migratePictures;
+var LEADS=[];
+function loadLeads(){
+  var box=document.getElementById('leadList'); if(!box)return;
+  box.innerHTML='<p class="note">Loading...</p>';
+  fetch(SB_URL+'/rest/v1/leads?select=*&order=created_at.desc&limit=200',{headers:sbHeaders(true)})
+    .then(function(r){ return r.json().catch(function(){return null}).then(function(j){return {r:r,j:j}}) })
+    .then(function(res){
+      if(!res.r.ok){ box.innerHTML='<p class="note" style="color:#B3261E">Could not load: '+sbError(res.r,res.j)+'</p>'; return }
+      LEADS=res.j||[];
+      if(!LEADS.length){ box.innerHTML='<p class="note">No enquiries yet.</p>'; return }
+      box.innerHTML=LEADS.map(function(x){
+        var when=x.created_at?new Date(x.created_at).toLocaleString():'';
+        return '<div class="row" style="flex-wrap:wrap"><div class="t" style="flex:1 1 100%">'+
+          '<b>'+esc(x.name||'No name')+'</b> &nbsp; '+esc(x.phone||'')+
+          (x.email?' &nbsp; '+esc(x.email):'')+
+          '<small>'+esc(when)+(x.message?' | '+esc(x.message):'')+'</small></div>'+
+          '<div style="display:flex;gap:.4rem">'+
+          (x.phone?'<a class="btn btn-ghost btn-sm" href="tel:'+esc((x.phone||'').replace(/\s/g,''))+'">Call</a>':'')+
+          (x.phone?'<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/'+esc((x.phone||'').replace(/\D/g,''))+'">WhatsApp</a>':'')+
+          '</div></div>' }).join('');
+    })
+    .catch(function(){ box.innerHTML='<p class="note" style="color:#B3261E">No connection to Supabase.</p>' });
+}
+function exportLeads(){
+  if(!LEADS.length){ alert('Press Refresh first.'); return }
+  var head=['created_at','name','phone','email','message','page'];
+  var rows=[head.join(',')].concat(LEADS.map(function(x){
+    return head.map(function(k){ return '"'+String(x[k]==null?'':x[k]).replace(/"/g,'""')+'"' }).join(',') }));
+  var b=new Blob([rows.join('\n')],{type:'text/csv'}), a=document.createElement('a');
+  a.href=URL.createObjectURL(b); a.download='studyex-enquiries.csv'; a.click();
+}
 document.getElementById('exportBtn').onclick=function(){
   var b=new Blob([JSON.stringify(load(),null,2)],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(b);a.download='studyex-content.json';a.click()};
