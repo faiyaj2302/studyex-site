@@ -1004,6 +1004,14 @@ function fetchRemote(){
         for(var k in s) if(!(k in remote)) remote[k]=s[k];
         remote.settings=remote.settings||{}; for(var k2 in s.settings) if(!(k2 in remote.settings)) remote.settings[k2]=s.settings[k2];
         remote.copy=remote.copy||{}; for(var k3 in COPYDEF) if(!(k3 in remote.copy)) remote.copy[k3]=COPYDEF[k3];
+        remote.faqs=remote.faqs||s.faqs;
+        remote.legal=remote.legal||{}; for(var k4 in LEGALDEF) if(!(k4 in remote.legal)) remote.legal[k4]=LEGALDEF[k4];
+        remote.sections=remote.sections||s.sections;
+        (s.sections||[]).forEach(function(def,i){
+          var has=remote.sections.some(function(x){return x.key===def.key});
+          if(!has){ var at=Math.min(i,remote.sections.length); remote.sections.splice(at,0,JSON.parse(JSON.stringify(def))) }
+        });
+        remote.sections=remote.sections.filter(function(x){ return s.sections.some(function(def){return def.key===x.key}) });
         migrate(remote);
         delete remote.__partial;
         mem=remote; usingSeed=false; booting=false;
@@ -1610,8 +1618,6 @@ function setupIgScroll(){
   el.addEventListener('touchstart',pause,{passive:true});
   el.addEventListener('touchmove',pause,{passive:true});
   el.addEventListener('touchend',pause,{passive:true});
-  el.addEventListener('mouseenter',function(){ paused=true; sync() });
-  el.addEventListener('mouseleave',function(){ if(!down){ sync(); paused=false } });
   el.addEventListener('pointerdown',function(e){ if(e.pointerType==='mouse'){down=true;paused=true;startX=e.clientX;startLeft=el.scrollLeft;e.preventDefault()} });
   window.addEventListener('pointermove',function(e){ if(down){ var w=half();
     var v=startLeft-(e.clientX-startX);
