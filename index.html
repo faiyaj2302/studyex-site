@@ -146,7 +146,6 @@ html.pl-lock,html.pl-lock body{overflow:hidden}
 .pl-final img{height:clamp(78px,20vw,140px);width:auto;max-height:80%;flex:0 0 auto}
 .pl-name{font-family:var(--f-title);font-weight:700;letter-spacing:.01em;white-space:nowrap}
 .pl-name em{font-style:normal;color:var(--gold-soft)}
-@media (prefers-reduced-motion:reduce){.pl{display:none}}
 
 /* ---------- header ---------- */
 header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-l)}
@@ -657,7 +656,6 @@ footer a:hover{color:#fff}
   .video{border-radius:18px}
   .btn{padding:.95rem 1.6rem;font-size:1rem}
 }
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
@@ -1626,7 +1624,7 @@ function setupIgScroll(){
   if(el.dataset.wired){ return }
   el.dataset.wired='1';
   var paused=false, down=false, startX=0, startLeft=0, timer=null, pos=0, visible=true;
-  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduce=false;
   function half(){ var row=document.getElementById('igRow'); return row?row.scrollWidth/2:0 }
   function sync(){ pos=el.scrollLeft }
   function pause(){ paused=true; sync(); clearTimeout(timer);
@@ -1792,7 +1790,7 @@ function renderAll(){applyFonts();applyMeta();applyCopy();renderFaq();renderLega
 /* ================= ANIMATION ================= */
 var io;
 function observe(){
-  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduce=false;
   var els=document.querySelectorAll('.rv:not(.in)');
   if(reduce){els.forEach(function(e){e.classList.add('in')});return}
   if(!io) io=new IntersectionObserver(function(en){en.forEach(function(x){ if(!x.isIntersecting)return;
@@ -2154,7 +2152,6 @@ renderAll(); route(); cookieSetup(); leadSetup(); fetchRemote();
   if(lg){ try{ lg.src=(load().settings||{}).headerLogo||LOGO_W }catch(e){ lg.src=LOGO_W } }
   var nm=pl.querySelector('.pl-name'), c=(load().copy||{}).brandName;
   if(nm&&c)nm.innerHTML=c;
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ drop(); document.body.classList.add('hero-entered'); return }
   document.documentElement.classList.add('pl-lock');
   setTimeout(function(){ document.documentElement.classList.remove('pl-lock') },1150);
   /* wait for the lift to finish before taking the screen away, so it never pops */
