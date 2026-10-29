@@ -21,7 +21,7 @@
   --f-name:'Caacupe One','Lato',sans-serif;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+@media (min-width:721px){html{scroll-behavior:smooth}}
 body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--f-body);
   font-size:1.28rem;line-height:1.72;text-rendering:geometricPrecision;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 h1,h2,h3,h4,.disp{font-family:var(--f-title);font-weight:700;margin:0;color:var(--navy);line-height:1.05;letter-spacing:0}
@@ -161,6 +161,7 @@ header.top{position:sticky;top:0;z-index:70;background:rgba(5,29,65,.96);backdro
 /* ---------- hero ---------- */
 .hero{background:var(--navy);color:#fff;position:relative;overflow:hidden;padding:5.5rem 0 5rem}
 .hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0}
+.hero-bg:after{content:'';position:absolute;inset:0;background:rgba(2,16,31,.38);z-index:1}
 .hero:after{display:none}
 .hero-in{position:relative;z-index:3}
 .hero-in>div{max-width:900px}
@@ -237,7 +238,7 @@ a.acc{text-decoration:none;cursor:pointer}
 
 /* ---------- video ---------- */
 .video{position:relative;border-radius:34px;overflow:hidden;margin-top:3rem;background:var(--navy-mid);
-  box-shadow:18px 18px 40px rgba(2,16,31,.5),-14px -14px 34px var(--navy-lift);aspect-ratio:16/9;max-width:720px;margin-left:auto;margin-right:auto}
+  box-shadow:18px 18px 40px rgba(2,16,31,.5),-14px -14px 34px var(--navy-lift);aspect-ratio:16/9;max-width:560px;margin-left:auto;margin-right:auto}
 .video iframe,.video img{width:100%;height:100%;border:0;display:block;object-fit:cover}
 .video .play{position:absolute;inset:0;display:grid;place-items:center;cursor:pointer;background:rgba(5,29,65,.3)}
 .video .play i{width:88px;height:88px;border-radius:50%;background:var(--gold-soft);display:grid;place-items:center;
@@ -252,7 +253,7 @@ a.acc{text-decoration:none;cursor:pointer}
 /* ---------- instagram ---------- */
 .ig-wrap{background:var(--navy);padding:var(--pad) 0;overflow:hidden}
 .ig-row{display:flex;gap:1.6rem;width:max-content}
-.ig-scroll{overflow-x:auto;scrollbar-width:none;cursor:grab;scroll-behavior:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:auto;will-change:scroll-position;touch-action:pan-x}
+.ig-scroll{overflow-x:auto;scrollbar-width:none;cursor:grab;scroll-behavior:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x}
 .ig-scroll::-webkit-scrollbar{display:none}
 .ig-scroll.manual{cursor:grabbing}
 
@@ -280,9 +281,10 @@ a.acc{text-decoration:none;cursor:pointer}
 .ig-inner{position:relative;transition:transform .6s ease;transform-style:preserve-3d}
 .ig.flipped .ig-inner{transform:rotateY(180deg)}
 .ig-front,.ig-back{backface-visibility:hidden}
-.ig-back{position:absolute;inset:0;transform:rotateY(180deg);background:var(--navy);color:#fff;display:flex;
-  align-items:center;justify-content:center;padding:2.4rem 1.8rem;text-align:center;border-radius:14px}
-.ig-back .flip-text{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.35rem;line-height:1.6;color:var(--gold)}
+.ig-back{position:absolute;inset:0;transform:rotateY(180deg);background:#fff;color:var(--navy);display:flex;
+  align-items:center;justify-content:center;padding:2.4rem 1.8rem;text-align:center;border-radius:14px;
+  box-shadow:0 18px 40px rgba(0,0,0,.34)}
+.ig-back .flip-text{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:1.35rem;line-height:1.7;color:var(--navy);letter-spacing:.01em}
 
 /* ---------- services tabs ---------- */
 .svc-tabs{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:3rem}
@@ -554,6 +556,9 @@ footer a:hover{color:#fff}
   .tst{flex:0 0 auto;padding:1.6rem}
   .tst .fold{writing-mode:horizontal-tb;transform:none;height:auto;font-size:.98rem;white-space:normal}
   .tst .full{min-width:0}
+  .rv{transform:translateY(14px);transition-duration:.5s}
+  header.top{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--navy)}
+  .stat:hover,.acc:hover,.cpill:hover{transform:none}
   .ig{width:278px}
   .founder-grid{grid-template-columns:1fr}
   .team-grid{grid-template-columns:1fr 1fr;gap:1.2rem}
@@ -1282,7 +1287,7 @@ function renderHome(){
   document.getElementById('footMark').innerHTML = '<img class="foot-logo" src="'+(s.footerLogo||LOGO_W)+'" alt="StudyEx">';
   var hb=document.getElementById('heroBg');
   hb.style.backgroundImage = s.heroImage? 'url('+s.heroImage+')' : 'none';
-  hb.style.opacity = s.heroOpacity? (parseFloat(s.heroOpacity)||0.35) : 0.35;
+  hb.style.opacity = 1;
   var fo=s.footerOpacity===''||s.footerOpacity==null?1:(parseFloat(s.footerOpacity)||0);
   document.getElementById('footBanner').innerHTML = s.footerBanner
     ? '<img src="'+s.footerBanner+'" alt="" style="width:100%;display:block;opacity:'+fo+'">'
@@ -1407,7 +1412,7 @@ function setupIgScroll(){
   if('IntersectionObserver' in window){
     new IntersectionObserver(function(en){ visible=en[0].isIntersecting; if(visible)sync() },{threshold:0}).observe(el);
   }
-  var speed=reduce?0:(isMobile?0.35:0.6);
+  var speed=reduce||isMobile?0:0.6;
   pos=el.scrollLeft;
   (function tick(){
     requestAnimationFrame(tick);
