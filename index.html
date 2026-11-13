@@ -10,6 +10,9 @@
 <meta id="ogImage" property="og:image" content="">
 <meta property="og:type" content="website">
 <meta id="twCard" name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://koprswasloaiaqxfaemd.supabase.co">
 <link id="favicon" rel="icon" href="data:,">
 <script>
 (function(){var l=location;if(l.protocol==='http:'&&l.hostname!=='localhost'&&l.hostname!=='127.0.0.1'&&l.hostname.indexOf('192.168.')!==0){l.replace('https://'+l.host+l.pathname+l.search+l.hash)}})();
@@ -653,6 +656,16 @@ footer a:hover{color:#fff}
   .video{border-radius:18px}
   .btn{padding:.95rem 1.6rem;font-size:1rem}
 }
+/* ---------- popup ads ---------- */
+.popup-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.popup-overlay.open{opacity:1;pointer-events:auto}
+.popup-box{position:relative;width:min(780px,92vw);border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.45);display:flex;flex-direction:column}
+.popup-box img{width:100%;aspect-ratio:5/4;object-fit:cover;display:block}
+.popup-close{position:absolute;top:8px;right:8px;width:36px;height:36px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:1.4rem;cursor:pointer;display:grid;place-items:center;z-index:2;line-height:1;transition:background .2s}
+.popup-close:hover{background:rgba(0,0,0,.8)}
+.popup-cta{display:block;text-align:center;padding:.7rem 1.6rem;background:#fff;color:var(--navy);font-weight:700;font-family:var(--f-sub);text-decoration:none;font-size:1rem;white-space:nowrap;transition:background .2s}
+.popup-cta:hover{background:var(--cream-deep,#f0ead6)}
+@media(max-width:720px){.popup-box{width:min(360px,88vw)}.popup-box img{aspect-ratio:4/5}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}html{scroll-behavior:auto}}
 </style>
 </head>
@@ -664,6 +677,14 @@ footer a:hover{color:#fff}
     <span class="pl-word pl-w2">Apply</span>
     <span class="pl-word pl-w3">Fly</span>
     <span class="pl-final"><img id="plLogo" alt=""><span class="pl-name">Study<em>Ex</em></span></span>
+  </div>
+</div>
+
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-box" id="popupBox">
+    <button class="popup-close" id="popupClose" aria-label="Close">&times;</button>
+    <img id="popupImg" src="" alt="">
+    <a class="popup-cta" id="popupCta" href="#" target="_blank" rel="noopener"></a>
   </div>
 </div>
 
@@ -1348,6 +1369,7 @@ function seed(){return {
   {key:'testimonials',label:'Testimonials',bg:'cream'},
   {key:'faq',label:'Questions and answers',bg:'cream'},
   {key:'contact',label:'Contact block',bg:'creamdeep'}],
+ popupAds:[],
  faqs:[
   {q:'Do I need IELTS to apply?',a:'Not always. Several universities accept a medium of instruction certificate or their own English test. We check the exact requirement for your shortlist before you spend money on an exam.'},
   {q:'How much money does my family need to show?',a:'It depends entirely on the country. We show you the real figure, the account it has to sit in, and how long it needs to be there, before you start the file.'},
@@ -1408,6 +1430,7 @@ function migrate(o){
   var old=(o.copy.teamSecTitle||'').toLowerCase();
   if(old==='team and experts'){ o.copy.teamSecTitle=COPYDEF.teamSecTitle; o.copy.teamSecLede=COPYDEF.teamSecLede }
   if(!o.experts)o.experts=seed().experts;
+  if(!o.popupAds)o.popupAds=[];
   return o;
 }
 /* The browser only gives a site about 5 MB. Once enough pictures are uploaded the content
@@ -1450,7 +1473,7 @@ function save(){
   });
 }
 function esc(s){return (s==null?'':''+s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function img(src,alt,cls){return '<img src="'+src+'" alt="'+esc(alt||'')+'"'+(cls?' class="'+cls+'"':'')+'>'}
+function img(src,alt,cls,eager){return '<img src="'+src+'" alt="'+esc(alt||'')+'"'+(cls?' class="'+cls+'"':'')+(eager?'':' loading="lazy" decoding="async"')+'>'}
 function slot(txt,cls){return '<div class="slot '+(cls||'')+'">'+esc(txt)+'</div>'}
 /* an opacity the admin typed, or the default if the box was left empty */
 function op(v,dflt){ if(v===''||v==null)return dflt; var n=parseFloat(v); return isNaN(n)?dflt:Math.max(0,Math.min(1,n)) }
@@ -1476,8 +1499,8 @@ function ytId(u){ if(!u)return''; var m=(u||'').match(/(?:v=|youtu\.be\/|embed\/
 /* ================= RENDER ================= */
 function renderHome(){
   var d=load(), s=d.settings;
-  document.getElementById('headMark').innerHTML = img(s.headerLogo||LOGO_W,'StudyEx');
-  document.getElementById('footMark').innerHTML = '<img class="foot-logo" src="'+(s.footerLogo||LOGO_W)+'" alt="StudyEx">';
+  document.getElementById('headMark').innerHTML = img(s.headerLogo||LOGO_W,'StudyEx','',true);
+  document.getElementById('footMark').innerHTML = '<img class="foot-logo" src="'+(s.footerLogo||LOGO_W)+'" alt="StudyEx" loading="lazy" decoding="async">';
   var hb=document.getElementById('heroBg');
   hb.style.backgroundImage = s.heroImage? 'url('+s.heroImage+')' : 'none';
   var tp=(s.tstPanel===''||s.tstPanel==null)?0.88:(parseFloat(s.tstPanel)||0);
@@ -1485,7 +1508,7 @@ function renderHome(){
   hb.style.opacity = s.heroOpacity? (parseFloat(s.heroOpacity)||0.35) : 0.35;
   var fo=s.footerOpacity===''||s.footerOpacity==null?1:(parseFloat(s.footerOpacity)||0);
   document.getElementById('footBanner').innerHTML = s.footerBanner
-    ? '<img src="'+s.footerBanner+'" alt="" style="width:100%;display:block;opacity:'+fo+'">'
+    ? '<img src="'+s.footerBanner+'" alt="" style="width:100%;display:block;opacity:'+fo+'" loading="lazy" decoding="async">'
     : slot('Footer banner image','slot-d');
 
   var STATDEF=['#/#acceptances','#/#stories','#/#countries','#/#stories'];
@@ -1524,7 +1547,7 @@ function renderHome(){
 
   var id=ytId(s.youtube);
   document.getElementById('videoBox').innerHTML = id
-    ? '<img src="https://img.youtube.com/vi/'+id+'/maxresdefault.jpg" alt=""><div class="play" onclick="playVid(\''+id+'\')"><i>&#9654;</i></div>'
+    ? '<img src="https://img.youtube.com/vi/'+id+'/maxresdefault.jpg" alt="" loading="lazy" decoding="async"><div class="play" onclick="playVid(\''+id+'\')"><i>&#9654;</i></div>'
     : '<div style="height:100%;display:grid;place-items:center;text-align:center;color:rgba(255,255,255,.7)"><div><i style="display:grid;place-items:center;width:88px;height:88px;border-radius:50%;background:var(--gold-soft);color:var(--navy);font-style:normal;font-size:1.8rem;margin:0 auto 1rem">&#9654;</i>Add a YouTube link in the admin panel</div></div>';
 
   var p=d.posts[0]||{};
@@ -1580,7 +1603,7 @@ function renderServices(i){
   panel.innerHTML=
     '<div class="svc-copy"><h3>'+esc(s.title)+'</h3><p>'+esc(s.desc)+'</p><div class="chips">'+chips+'</div></div>'+
     '<div class="svc-art"><div class="blk b1"></div><div class="blk b2"></div><div class="blk b3"></div>'+
-    (s.image?'<img src="'+s.image+'" alt="">':'')+
+    (s.image?'<img src="'+s.image+'" alt="" loading="lazy" decoding="async">':'')+
     '<div class="idx">'+(i+1)+'</div><div class="word">'+esc(s.word||s.title)+'</div></div>';
 }
 var tstTimer=null, tstSeen=false;
@@ -1685,7 +1708,7 @@ function renderPages(){
   document.getElementById('footContact').innerHTML=
     '<div style="margin-bottom:.9rem">'+esc(s.address)+'</div>'+
     (s.mapUrl?'<a class="maplink" href="'+esc(s.mapUrl)+'" target="_blank" rel="noopener">'+
-      (s.mapImage?'<img src="'+s.mapImage+'" alt="Map to our office">':'<span class="slot slot-d mapslot">Map preview image</span>')+
+      (s.mapImage?'<img src="'+s.mapImage+'" alt="Map to our office" loading="lazy" decoding="async">':'<span class="slot slot-d mapslot">Map preview image</span>')+
       '<span class="mapcta">Open in Google Maps</span></a>':'')+
     '<a href="tel:'+esc((s.phone||'').replace(/\s/g,''))+'">'+esc(s.phone)+'</a>'+
     '<a href="mailto:'+esc(s.email)+'">'+esc(s.email)+'</a>'+
@@ -1702,6 +1725,8 @@ function applyLayout(){
   Array.prototype.forEach.call(host.children,function(el){ map[el.getAttribute('data-sec')]=el });
   list.forEach(function(s){
     var el=map[s.key]; if(!el)return;
+    if(s.show==='no'){ el.style.display='none'; host.appendChild(el); return }
+    el.style.display='';
     host.appendChild(el);
     var bg=BGS[s.bg]||BGS.cream;
     el.style.background=bg[0];
@@ -1889,6 +1914,7 @@ var SCHEMA={
     {k:'fontName',l:'Country and student names font',t:'select',opts:FONTOPTS},
     {k:'fontSub',l:'Subheadings and buttons font',t:'select',opts:FONTOPTS},
     {k:'fontBody',l:'Body text font',t:'select',opts:FONTOPTS}]},
+  popupAds:{label:'Pop-up ads',group:'Home page',fields:[{k:'imagePC',l:'PC image (5:4 landscape)',t:'file'},{k:'imageMob',l:'Phone image (4:5 portrait)',t:'file'},{k:'link',l:'Button link'},{k:'btnText',l:'Button text, e.g. See Details'},{k:'title',l:'Ad title, for your reference only'},{k:'show',l:'Show this ad',t:'select',opts:[['yes','Show'],['no','Hide']]}],title:'title',sub:'link',thumb:'imagePC'},
   stats:{label:'Statistics',group:'Home page',fields:[{k:'n',l:'Number, for example 120+'},{k:'l',l:'Label'},
     {k:'icon',l:'Icon image, leave empty to keep the built in icon',t:'file'}],title:'n',sub:'l',thumb:'icon'},
   countries:{label:'Countries',group:'Home page',fields:[{k:'flag',l:'Flag emoji'},{k:'name',l:'Country'},{k:'url',l:'Link this country opens'},
@@ -1943,7 +1969,7 @@ function buildAdmin(){
     var list='';
     if(!S.single){
       list=d[key].map(function(it,j){
-        var th=S.thumb&&it[S.thumb]?'<img class="thumb" src="'+it[S.thumb]+'">':(S.thumb?'<div class="thumb"></div>':'');
+        var th=S.thumb&&it[S.thumb]?'<img class="thumb" src="'+it[S.thumb]+'" loading="lazy" decoding="async">':(S.thumb?'<div class="thumb"></div>':'');
         return '<div class="row">'+th+'<div class="t">'+esc(it[S.title])+'<small>'+esc((''+(it[S.sub]||'')).slice(0,80))+'</small></div>'+
           '<div style="display:flex;gap:.4rem"><button class="btn btn-ghost btn-sm" onclick="editItem(\''+key+'\','+j+')">Edit</button>'+
           (S.reorder?'':'<button class="btn btn-ghost btn-sm" onclick="delItem(\''+key+'\','+j+')">Delete</button>')+
@@ -2126,11 +2152,37 @@ function exportLeads(){
 
 renderAll(); route(); cookieSetup(); leadSetup(); fetchRemote();
 
+/* ---------- popup ads ---------- */
+function showPopupAds(){
+  var ads=(load().popupAds||[]).filter(function(a){return (a.imagePC||a.imageMob)&&a.show!=='no'});
+  if(!ads.length)return;
+  var ov=document.getElementById('popupOverlay'),
+      im=document.getElementById('popupImg'),
+      cta=document.getElementById('popupCta'),
+      mobile=window.innerWidth<=720,
+      idx=0;
+  function show(i){
+    if(i>=ads.length){ov.classList.remove('open');return}
+    var a=ads[i];
+    var src=mobile?(a.imageMob||a.imagePC):(a.imagePC||a.imageMob);
+    im.src=src;
+    im.alt=a.title||'';
+    cta.href=a.link||'#';
+    cta.textContent=a.btnText||'See Details';
+    cta.style.display=a.link?'':'none';
+    ov.classList.add('open');
+    idx=i;
+  }
+  document.getElementById('popupClose').onclick=function(){show(idx+1)};
+  ov.addEventListener('click',function(e){if(e.target===ov)show(idx+1)});
+  show(0);
+}
+
 /* the opening animation, 1150ms, then it lifts away and the page is yours */
 (function(){
   var pl=document.getElementById('preload'); if(!pl)return;
   function drop(){ if(pl&&pl.parentNode){ pl.parentNode.removeChild(pl); pl=null }
-    document.documentElement.classList.remove('pl-lock'); document.body.classList.add('hero-entered') }
+    document.documentElement.classList.remove('pl-lock'); document.body.classList.add('hero-entered'); showPopupAds() }
   if(location.hash.indexOf('#/admin')===0){ drop(); return }
   var lg=document.getElementById('plLogo');
   if(lg){ try{ lg.src=(load().settings||{}).headerLogo||LOGO_W }catch(e){ lg.src=LOGO_W } }
