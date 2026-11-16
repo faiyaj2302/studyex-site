@@ -257,8 +257,10 @@ a.acc{text-decoration:none;cursor:pointer}
 .video .play{position:absolute;inset:0;display:grid;place-items:center;cursor:pointer;background:rgba(5,29,65,.3)}
 .video .play i{width:88px;height:88px;border-radius:50%;background:var(--gold-soft);display:grid;place-items:center;
   font-style:normal;color:var(--navy);font-size:1.8rem;padding-left:6px;box-shadow:0 14px 34px rgba(0,0,0,.35)}
-.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2rem;margin-top:3rem}
-.video-grid .video{margin-top:0;max-width:none}
+.video-grid{display:flex;gap:2rem;margin-top:3rem}
+.video-grid .video{flex:1 1 0;margin-top:0;max-width:none;min-width:0}
+@media(max-width:720px){.video-grid{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.video-grid .video{flex:0 0 85vw;scroll-snap-align:start}}
 
 /* ---------- featured post ---------- */
 .feat{display:grid;grid-template-columns:1.05fr 1fr;gap:3rem;align-items:center;margin-top:3rem}
@@ -2170,7 +2172,10 @@ function exportLeads(){
 renderAll(); route(); cookieSetup(); leadSetup(); fetchRemote();
 
 /* ---------- popup ads ---------- */
+var popupShown=false;
 function showPopupAds(){
+  if(popupShown)return;
+  popupShown=true;
   var ads=(load().popupAds||[]).filter(function(a){return (a.imagePC||a.imageMob)&&a.show!=='no'});
   if(!ads.length)return;
   var ov=document.getElementById('popupOverlay'),
