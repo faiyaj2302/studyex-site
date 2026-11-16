@@ -257,6 +257,8 @@ a.acc{text-decoration:none;cursor:pointer}
 .video .play{position:absolute;inset:0;display:grid;place-items:center;cursor:pointer;background:rgba(5,29,65,.3)}
 .video .play i{width:88px;height:88px;border-radius:50%;background:var(--gold-soft);display:grid;place-items:center;
   font-style:normal;color:var(--navy);font-size:1.8rem;padding-left:6px;box-shadow:0 14px 34px rgba(0,0,0,.35)}
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:2rem;margin-top:3rem}
+.video-grid .video{margin-top:0;max-width:none}
 
 /* ---------- featured post ---------- */
 .feat{display:grid;grid-template-columns:1.05fr 1fr;gap:3rem;align-items:center;margin-top:3rem}
@@ -659,13 +661,13 @@ footer a:hover{color:#fff}
 /* ---------- popup ads ---------- */
 .popup-overlay{position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
 .popup-overlay.open{opacity:1;pointer-events:auto}
-.popup-box{position:relative;width:min(780px,92vw);border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.45);display:flex;flex-direction:column}
-.popup-box img{width:100%;aspect-ratio:5/4;object-fit:cover;display:block}
+.popup-box{position:relative;width:min(780px,92vw);max-height:90vh;border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.45);display:flex;flex-direction:column}
+.popup-box img{width:100%;display:block;min-height:0;object-fit:contain}
 .popup-close{position:absolute;top:8px;right:8px;width:36px;height:36px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:1.4rem;cursor:pointer;display:grid;place-items:center;z-index:2;line-height:1;transition:background .2s}
 .popup-close:hover{background:rgba(0,0,0,.8)}
 .popup-cta{display:block;text-align:center;padding:.7rem 1.6rem;background:#fff;color:var(--navy);font-weight:700;font-family:var(--f-sub);text-decoration:none;font-size:1rem;white-space:nowrap;transition:background .2s}
 .popup-cta:hover{background:var(--cream-deep,#f0ead6)}
-@media(max-width:720px){.popup-box{width:min(360px,88vw)}.popup-box img{aspect-ratio:4/5}}
+@media(max-width:720px){.popup-box{width:min(360px,88vw)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}html{scroll-behavior:auto}}
 </style>
 </head>
@@ -774,7 +776,7 @@ footer a:hover{color:#fff}
     <div class="wrap">
       <h2 class="rv" data-copy="watchTitle"></h2>
       <p class="lede rv" data-copy="watchLede"></p>
-      <div class="video rv" id="videoBox"></div>
+      <div id="videoBox"></div>
     </div>
   </section>
 
@@ -930,12 +932,12 @@ footer a:hover{color:#fff}
     <h2 class="rv" data-copy="foundersTitle"></h2>
     <p class="lede rv" data-copy="foundersLede"></p>
     <div class="founder-grid" id="founderGrid"></div>
-    <h2 class="rv" style="margin-top:5rem" data-copy="teamSecTitle"></h2>
-    <p class="lede rv" data-copy="teamSecLede"></p>
-    <div class="team-grid" id="teamGrid"></div>
     <h2 class="rv" style="margin-top:5rem" data-copy="expertsTitle"></h2>
     <p class="lede rv" data-copy="expertsLede"></p>
     <div class="team-grid" id="expertGrid"></div>
+    <h2 class="rv" style="margin-top:5rem" data-copy="teamSecTitle"></h2>
+    <p class="lede rv" data-copy="teamSecLede"></p>
+    <div class="team-grid" id="teamGrid"></div>
   </div></section>
 </main>
 
@@ -1370,6 +1372,7 @@ function seed(){return {
   {key:'faq',label:'Questions and answers',bg:'cream'},
   {key:'contact',label:'Contact block',bg:'creamdeep'}],
  popupAds:[],
+ videos:[],
  faqs:[
   {q:'Do I need IELTS to apply?',a:'Not always. Several universities accept a medium of instruction certificate or their own English test. We check the exact requirement for your shortlist before you spend money on an exam.'},
   {q:'How much money does my family need to show?',a:'It depends entirely on the country. We show you the real figure, the account it has to sit in, and how long it needs to be there, before you start the file.'},
@@ -1431,6 +1434,7 @@ function migrate(o){
   if(old==='team and experts'){ o.copy.teamSecTitle=COPYDEF.teamSecTitle; o.copy.teamSecLede=COPYDEF.teamSecLede }
   if(!o.experts)o.experts=seed().experts;
   if(!o.popupAds)o.popupAds=[];
+  if(!o.videos)o.videos=[];
   return o;
 }
 /* The browser only gives a site about 5 MB. Once enough pictures are uploaded the content
@@ -1545,10 +1549,22 @@ function renderHome(){
     var shut=a.url?'</a>':'</div>';
     return open+veil+fl+'<span class="nm">'+esc(a.name)+'</span><span class="num" data-count="'+(a.n||0)+'">0</span>'+shut}).join('');
 
-  var id=ytId(s.youtube);
-  document.getElementById('videoBox').innerHTML = id
-    ? '<img src="https://img.youtube.com/vi/'+id+'/maxresdefault.jpg" alt="" loading="lazy" decoding="async"><div class="play" onclick="playVid(\''+id+'\')"><i>&#9654;</i></div>'
-    : '<div style="height:100%;display:grid;place-items:center;text-align:center;color:rgba(255,255,255,.7)"><div><i style="display:grid;place-items:center;width:88px;height:88px;border-radius:50%;background:var(--gold-soft);color:var(--navy);font-style:normal;font-size:1.8rem;margin:0 auto 1rem">&#9654;</i>Add a YouTube link in the admin panel</div></div>';
+  var vids=(d.videos||[]).map(function(v){return ytId(v.url)}).filter(Boolean);
+  var legacy=ytId(s.youtube);
+  if(legacy&&!vids.length)vids=[legacy];
+  var vbox=document.getElementById('videoBox');
+  if(!vids.length){
+    vbox.className='video rv';
+    vbox.innerHTML='<div style="height:100%;display:grid;place-items:center;text-align:center;color:rgba(255,255,255,.7)"><div><i style="display:grid;place-items:center;width:88px;height:88px;border-radius:50%;background:var(--gold-soft);color:var(--navy);font-style:normal;font-size:1.8rem;margin:0 auto 1rem">&#9654;</i>Add a YouTube link in the admin panel</div></div>';
+  } else if(vids.length===1){
+    vbox.className='video rv';
+    vbox.innerHTML='<img src="https://img.youtube.com/vi/'+vids[0]+'/maxresdefault.jpg" alt="" loading="lazy" decoding="async"><div class="play" onclick="playVid(\''+vids[0]+'\',this)"><i>&#9654;</i></div>';
+  } else {
+    vbox.className='video-grid';
+    vbox.innerHTML=vids.map(function(vid){
+      return '<div class="video rv"><img src="https://img.youtube.com/vi/'+vid+'/maxresdefault.jpg" alt="" loading="lazy" decoding="async"><div class="play" onclick="playVid(\''+vid+'\',this)"><i>&#9654;</i></div></div>'
+    }).join('');
+  }
 
   var p=d.posts[0]||{};
   if(usingSeed&&booting){
@@ -1684,7 +1700,7 @@ function setupIgScroll(){
     el.scrollLeft=Math.round(pos);
   })();
 }
-function playVid(id){document.getElementById('videoBox').innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>'}
+function playVid(id,el){var box=el?el.closest('.video'):document.getElementById('videoBox');box.innerHTML='<iframe src="https://www.youtube.com/embed/'+id+'?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>'}
 function renderPages(){
   var d=load(), s=d.settings;
   document.getElementById('toolGrid').innerHTML=d.tools.map(function(t){
@@ -1914,7 +1930,8 @@ var SCHEMA={
     {k:'fontName',l:'Country and student names font',t:'select',opts:FONTOPTS},
     {k:'fontSub',l:'Subheadings and buttons font',t:'select',opts:FONTOPTS},
     {k:'fontBody',l:'Body text font',t:'select',opts:FONTOPTS}]},
-  popupAds:{label:'Pop-up ads',group:'Home page',fields:[{k:'imagePC',l:'PC image (5:4 landscape)',t:'file'},{k:'imageMob',l:'Phone image (4:5 portrait)',t:'file'},{k:'link',l:'Button link'},{k:'btnText',l:'Button text, e.g. See Details'},{k:'title',l:'Ad title, for your reference only'},{k:'show',l:'Show this ad',t:'select',opts:[['yes','Show'],['no','Hide']]}],title:'title',sub:'link',thumb:'imagePC'},
+  videos:{label:'YouTube videos',group:'Home page',fields:[{k:'url',l:'YouTube link'},{k:'title',l:'Video title, for your reference'}],title:'title',sub:'url'},
+  popupAds:{label:'Pop-up ads',group:'Home page',fields:[{k:'imagePC',l:'PC image',t:'file'},{k:'imageMob',l:'Phone image',t:'file'},{k:'link',l:'Button link'},{k:'btnText',l:'Button text, e.g. See Details'},{k:'title',l:'Ad title, for your reference only'},{k:'show',l:'Show this ad',t:'select',opts:[['yes','Show'],['no','Hide']]}],title:'title',sub:'link',thumb:'imagePC'},
   stats:{label:'Statistics',group:'Home page',fields:[{k:'n',l:'Number, for example 120+'},{k:'l',l:'Label'},
     {k:'icon',l:'Icon image, leave empty to keep the built in icon',t:'file'}],title:'n',sub:'l',thumb:'icon'},
   countries:{label:'Countries',group:'Home page',fields:[{k:'flag',l:'Flag emoji'},{k:'name',l:'Country'},{k:'url',l:'Link this country opens'},
@@ -2159,23 +2176,18 @@ function showPopupAds(){
   var ov=document.getElementById('popupOverlay'),
       im=document.getElementById('popupImg'),
       cta=document.getElementById('popupCta'),
-      mobile=window.innerWidth<=720,
-      idx=0;
-  function show(i){
-    if(i>=ads.length){ov.classList.remove('open');return}
-    var a=ads[i];
-    var src=mobile?(a.imageMob||a.imagePC):(a.imagePC||a.imageMob);
-    im.src=src;
-    im.alt=a.title||'';
-    cta.href=a.link||'#';
-    cta.textContent=a.btnText||'See Details';
-    cta.style.display=a.link?'':'none';
-    ov.classList.add('open');
-    idx=i;
-  }
-  document.getElementById('popupClose').onclick=function(){show(idx+1)};
-  ov.addEventListener('click',function(e){if(e.target===ov)show(idx+1)});
-  show(0);
+      mobile=window.innerWidth<=720;
+  var a=ads[0];
+  var src=mobile?(a.imageMob||a.imagePC):(a.imagePC||a.imageMob);
+  im.src=src;
+  im.alt=a.title||'';
+  cta.href=a.link||'#';
+  cta.textContent=a.btnText||'See Details';
+  cta.style.display=a.link?'':'none';
+  ov.classList.add('open');
+  function close(){ov.classList.remove('open')}
+  document.getElementById('popupClose').onclick=close;
+  ov.onclick=function(e){if(e.target===ov)close()};
 }
 
 /* the opening animation, 1150ms, then it lifts away and the page is yours */
